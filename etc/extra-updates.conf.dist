@@ -1,0 +1,10 @@
+#case "$PROJECT" in
+#    winston)
+#	$SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no -l grape $PROJECT.$PRO_HOSTNAME ./update-pro.sh
+#	exit
+#	;;
+#    rosno-butterfly)
+#	$SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no vs24.ailove.ru "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/rel"
+#	$SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no vs26.ailove.ru "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/rel"
+#	;;
+#esac

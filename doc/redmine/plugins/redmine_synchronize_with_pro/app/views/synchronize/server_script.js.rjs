@@ -1,0 +1,5 @@
+page << 'var div_obj=document.createElement("DIV"); '
+page << 'div_obj.id="synchronize_result"'
+
+page << 'document.getElementsByTagName("h2")[0].appendChild(div_obj)'
+page.replace_html 'synchronize_result', '<div style="font-size:10px; font-weight: normal;"><pre>'+@result+'</pre></div>'

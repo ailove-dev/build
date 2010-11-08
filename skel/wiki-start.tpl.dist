@@ -1,0 +1,74 @@
+h1. Project development environment
+
+h2. Доступ к БД
+
+Для проекта автоматически создаются две БД: PostgreSQL и MySQL. Данные для доступа вручную представлены в этом документе. Учитывая, что данные доступа к БД dev-, test- и pro- серверов отличаются, приложения должны их брать брать из файла conf/database (НЕ ХАРДКОДИТЬ!).
+
+h3. Исходящая почта
+
+По-умолчанию, вся почта, которая отправляется с dev-сервера, перенаправляется в отдельный почтовый ящик. Не перенаправляются только письма, адресованные на домены компании.
+
+*Параметры доступа:*
+<pre>
+host: ##DEV_DOMAIN##
+port: 143 (IMAP)
+user: dev
+pass: dev
+</pre>
+
+h3. PostgreSQL
+
+*Административный интерфейс*
+
+https://##FACTORY_HOSTNAME##/phpPgAdmin/
+
+*Параметры доступа:*
+<pre>
+host: ##DEV_DOMAIN##
+port: 5432
+name: ##PROJECT##
+user: ##PROJECT##
+pass: ##PASSWORD##
+</pre>
+
+h3. MySQL
+
+*Административный интерфейс*
+
+https://##FACTORY_HOSTNAME##/phpMyAdmin/
+
+*Параметры доступа:*
+<pre>
+host: ##DEV_DOMAIN##
+port: 3306
+name: ##PROJECT##
+user: ##PROJECT##
+pass: ##PASSWORD##
+</pre>
+
+h2. SVN репозиторий
+
+https://##FACTORY_HOSTNAME##/svn/##PROJECT##/
+
+login/password совпадают с учетными данными фабрики.
+
+h2. Параметры доступа FTP
+
+<pre>
+host dev-сервера: ##DEV_DOMAIN##
+host pro-сервера: ##PROJECT##.##PRO_DOMAIN##
+login: username@##PROJECT##
+</pre>
+
+Вместо _username_ необходимо ввести логин для входа в фабрику.
+Пароль совпадает с паролем фабрики.
+
+h2. DEV-, REL- и PRO-сайты
+
+http://##PROJECT##.##DEV_DOMAIN## (ветка *dev* в хранилище)
+http://##PROJECT##.##REL_DOMAIN## (ветка *rel* в хранилище)
+http://##PROJECT##.##PRO_DOMAIN## (синхронизируется из ветки *rel* на pro-сервер)
+
+h2. Crontab
+
+Добавить или изменить cron может только администратор. Просмотреть текущий cron можно через FTP в файле conf/crontab.

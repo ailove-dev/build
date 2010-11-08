@@ -1,0 +1,4 @@
+# English strings go here
+permission_view_devtorel_link: "Allow copy dev -> rel"
+project_module_devtorel_module: "Copy dev -> rel"
+devtorel_label: "Copy dev -> rel"

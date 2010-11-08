@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    server_name ##PROJECT##.##DEV_DOMAIN##;
+
+    access_log ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-acc main;
+    error_log ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-err;
+	
+    location / {
+	include proxy.inc.conf;
+    }
+
+    location ^~ /data/ {
+	root ##WWW_PATH##/##PROJECT##;
+    }
+
+    location ~* \.(jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2|doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|avi|djvu|mp3)$ {
+	root ##WWW_PATH##/##PROJECT##/repo/dev/htdocs;
+    }
+
+    include vhost.inc.conf;
+}

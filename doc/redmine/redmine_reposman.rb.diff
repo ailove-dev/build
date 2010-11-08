@@ -1,0 +1,41 @@
+59a60
+> require 'rdoc/ri/ri_paths'
+235,257c236
+<   if File.directory?(repos_path)
+< 
+<     # we must verify that repository has the good owner and the good
+<     # rights before leaving
+<     other_read = other_read_right?(repos_path)
+<     owner      = owner_name(repos_path)
+<     next if project.is_public == other_read and owner == $svn_owner
+< 
+<     if $test
+<       log("\tchange mode on #{repos_path}")
+<       next
+<     end
+< 
+<     begin
+<       set_owner_and_rights(project, repos_path)
+<     rescue Errno::EPERM => e
+<       log("\tunable to change mode on #{repos_path} : #{e}\n")
+<       next
+<     end
+< 
+<     log("\tmode change on #{repos_path}");
+< 
+<   else
+---
+>   if not File.directory?(repos_path)
+265,266d243
+<     project.is_public ? File.umask(0002) : File.umask(0007)
+< 
+274,280c251
+<       set_owner_and_rights(project, repos_path) do
+<         if scm_module.nil?
+<           system_or_raise "#{$command} #{repos_path}"
+<         else
+<           scm_module.create(repos_path)
+<         end
+<       end
+---
+>       raise "svnadmin create #{repos_path} failed" unless system("/srv/admin/bin/project-dev.sh", "create", project.identifier)
