@@ -163,7 +163,7 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
 fi
 
 # if action "create"
-if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate"]; then
+if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
     # if project already exists
     if [ -d "$SVN_REPOSITORIES_PATH/$PROJECT" -o -d "$GIT_REPOSITORIES_PATH/$PROJECT" -o -d "$WWW_PATH/$PROJECT" -o -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" ]; then
 	echo "can't create project '$PROJECT' because it already exists."
