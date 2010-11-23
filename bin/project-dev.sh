@@ -178,6 +178,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
     if [ "$ACTION" = "gitcreate" ]; then
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
+	cd $GIT_REPOSITORIES_PATH/$PROJECT
 	su $SU_SUFFIX $WWW_USERNAME -c "git --bare init"
 	# accept git push without authorization
 	su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
