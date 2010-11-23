@@ -89,7 +89,7 @@ SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 		-e 's@##PASSWORD##@$PASSWORD@g'"
 
 # if action is not entered
-if [ "$ACTION" != "create" -a "$ACTION" != "remove" -a "$ACTION" != "changepass" -a "$ACTION" != "dump" -a "$ACTION" != "zdump" ]; then
+if [ "$ACTION" != "create" -a "$ACTION" != "gitcreate" -a "$ACTION" != "remove" -a "$ACTION" != "changepass" -a "$ACTION" != "dump" -a "$ACTION" != "zdump" ]; then
     echo "use $0 <create|gitcreate|remove> <project>"
     echo "use $0 <dump|zdump> <project>"
     echo "use $0 <changepass> <mysql|postgresql>"
@@ -127,7 +127,7 @@ fi
 
 # if action or project is not entered
 if [ -z "$ACTION" -o -z "$PROJECT" ]; then
-    echo "use $0 <create|remove> <project>"
+    echo "use $0 <create|gitcreate|remove> <project>"
     exit 1
 fi
 
