@@ -153,7 +153,11 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
     fi
 
     echo "making dump $PROJECT-dump$TAR_EXT..."
-    svnadmin dump $SVN_REPOSITORIES_PATH/$PROJECT --quiet --incremental >$PROJECT.svn
+    if [ -d "$WWW_PATH/$PROJECT/repo/dev/.git" ]; then
+	tar -f $PROJECT.git.tar -c $GIT_REPOSITORIES_PATH/$PROJECT
+    else
+	svnadmin dump $SVN_REPOSITORIES_PATH/$PROJECT --quiet --incremental >$PROJECT.svn
+    fi
     mysqldump -u$MYSQL_USERNAME -p$MYSQL_PASSWORD $PROJECT >$PROJECT.mysql
     pg_dump --username=$POSTGRESQL_USERNAME --encoding=utf-8 --clean --no-owner $PROJECT >$PROJECT.pgsql
 
