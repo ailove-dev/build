@@ -185,11 +185,11 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
 
         # create dev&rel branches
         su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
-        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; git add .; git commit -a -m \"initial\"; git push origin master:refs/heads/dev"
+        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -m \"initial\"; git push origin master:refs/heads/dev"
         su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
         su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
-        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; git add .; git commit -a -m \"initial\"; git push origin master:refs/heads/rel"
+        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -m \"initial\"; git push origin master:refs/heads/rel"
         su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
 
 	# clone branches
