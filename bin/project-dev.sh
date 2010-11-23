@@ -175,7 +175,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
     ########################################################################################################################
 
 
-    if [ "$ACTION" = "gitcreate"]; then
+    if [ "$ACTION" = "gitcreate" ]; then
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
 	su $SU_SUFFIX $WWW_USERNAME -c "git --bare init"
@@ -242,7 +242,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
     chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cache; chmod 777 $WWW_PATH/$PROJECT/cache
 
     # create revision file
-    if [ "$ACTION" = "gitcreate"]; then
+    if [ "$ACTION" = "gitcreate" ]; then
 	touch $WWW_PATH/$PROJECT/conf/revision
 	chown $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT/conf/revision
 	chmod 644 $WWW_PATH/$PROJECT/conf/revision
