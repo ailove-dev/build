@@ -158,7 +158,7 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
     pg_dump --username=$POSTGRESQL_USERNAME --encoding=utf-8 --clean --no-owner $PROJECT >$PROJECT.pgsql
 
     tar $TAR_FLAGS $PROJECT-dump$TAR_EXT $PROJECT.svn $PROJECT.mysql $PROJECT.pgsql $WWW_PATH/$PROJECT/conf $WWW_PATH/$PROJECT/data
-    rm $PROJECT.svn $PROJECT.mysql $PROJECT.pgsql
+    rm -f $PROJECT.svn $PROJECT.mysql $PROJECT.pgsql
     exit 0
 fi
 
@@ -364,16 +364,16 @@ if [ "$ACTION" = "remove" ]; then
     # remove project's directories and configuration files
     rm -rf $SVN_REPOSITORIES_PATH/$PROJECT
     rm -rf $GIT_REPOSITORIES_PATH/$PROJECT
-    rm $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-    rm $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+    rm -f $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+    rm -f $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
 
     if [ -f "$CROND_PATH/$PROJECT" ]; then
-	rm $CROND_PATH/$PROJECT
+	rm -f $CROND_PATH/$PROJECT
     fi
 
     if [ "$NGINX_ENABLED" != "NO" ]; then
-	rm $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-	rm $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+	rm -f $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+	rm -f $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
     fi
 
     rm -r $WWW_PATH/$PROJECT > /dev/null 2>&1
