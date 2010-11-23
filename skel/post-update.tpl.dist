@@ -1,0 +1,6 @@
+#!/bin/sh
+
+BRANCH=`echo $1 | awk --field-separator="/" '{print $3}'`
+cd ##WWW_PATH##/##PROJECT##/repo/$BRANCH
+GIT_SSL_NO_VERIFY=true ##SUDO_PATH## -u ##GIT_USERNAME## ##GIT_PATH## pull
+##SUDO_PATH## -u ##GIT_USERNAME## /srv/admin/bin/update-revision.sh ##PROJECT## $BRANCH

@@ -62,7 +62,6 @@
 
 
 require 'getoptlong'
-require 'rdoc/ri/ri_paths'
 require 'rdoc/usage'
 require 'find'
 require 'etc'
@@ -181,7 +180,9 @@ rescue LoadError
   log("This script requires activeresource.\nRun 'gem install activeresource' to install it.", :exit => true)
 end
 
-class Project < ActiveResource::Base; end
+class Project < ActiveResource::Base
+  self.headers["User-agent"] = "Redmine repository manager/#{Version}"
+end
 
 log("querying Redmine for projects...", :level => 1);
 
@@ -258,17 +259,17 @@ projects.each do |project|
       next
     end
 
-    begin
-      raise "svnadmin create #{repos_path} failed" unless system("/srv/admin/bin/project-dev.sh", "create", project.identifier)
-    rescue => e
-      log("\tunable to create #{repos_path} : #{e}\n")
-      next
-    end
-
     if $svn_url
       begin
-        project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}"}, :key => $api_key)
-        log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}");
+	if $scm == "Git"
+    	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}/repo/.git"}, :key => $api_key)
+	    raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
+    	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}/repo/.git");
+    	else
+    	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}"}, :key => $api_key)
+	    raise "svn repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "create", project.identifier)
+    	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}");
+    	end
       rescue => e
         log("\trepository #{repos_path} not registered in Redmine: #{e.message}");
       end

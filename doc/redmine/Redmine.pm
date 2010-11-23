@@ -93,6 +93,84 @@ S<them :>
 
 And you need to upgrade at least reposman.rb (after r860).
 
+=head1 GIT SMART HTTP SUPPORT
+
+Git's smart HTTP protocol (available since Git 1.7.0) will not work with the
+above settings. Redmine.pm normally does access control depending on the HTTP
+method used: read-only methods are OK for everyone in public projects and
+members with read rights in private projects. The rest require membership with
+commit rights in the project.
+
+However, this scheme doesn't work for Git's smart HTTP protocol, as it will use
+POST even for a simple clone. Instead, read-only requests must be detected using
+the full URL (including the query string): anything that doesn't belong to the
+git-receive-pack service is read-only.
+
+To activate this mode of operation, add this line inside your <Location /git>
+block:
+
+  RedmineGitSmartHttp yes
+
+Here's a sample Apache configuration which integrates git-http-backend with
+a MySQL database and this new option:
+
+   SetEnv GIT_PROJECT_ROOT /var/www/git/
+   SetEnv GIT_HTTP_EXPORT_ALL
+   ScriptAlias /git/ /usr/libexec/git-core/git-http-backend/
+   <Location /git>
+       Order allow,deny
+       Allow from all
+
+       AuthType Basic
+       AuthName Git
+       Require valid-user
+
+       PerlAccessHandler Apache::Authn::Redmine::access_handler
+       PerlAuthenHandler Apache::Authn::Redmine::authen_handler
+       # for mysql
+       RedmineDSN "DBI:mysql:database=redmine;host=127.0.0.1"
+       RedmineDbUser "redmine"
+       RedmineDbPass "xxx"
+       RedmineGitSmartHttp yes
+    </Location>
+
+Make sure that all the names of the repositories under /var/www/git/ match
+exactly the identifier for some project: /var/www/git/myproject.git won't work,
+due to the way this module extracts the identifier from the URL.
+/var/www/git/myproject will work, though. You can put both bare and non-bare
+repositories in /var/www/git, though bare repositories are strongly
+recommended. You should create them with the rights of the user running Redmine,
+like this:
+
+  cd /var/www/git
+  sudo -u user-running-redmine mkdir myproject
+  cd myproject
+  sudo -u user-running-redmine git init --bare
+
+Once you have activated this option, you have three options when cloning a
+repository:
+
+- Cloning using "http://user@host/git/repo" works, but will ask for the password
+  all the time.
+
+- Cloning with "http://user:pass@host/git/repo" does not have this problem, but
+  this could reveal accidentally your password to the console in some versions
+  of Git, and you would have to ensure that .git/config is not readable except
+  by the owner for each of your projects.
+
+- Use "http://host/git/repo", and store your credentials in the ~/.netrc
+  file. This is the recommended solution, as you only have one file to protect
+  and passwords will not be leaked accidentally to the console.
+
+  IMPORTANT NOTE: It is *very important* that the file cannot be read by other
+  users, as it will contain your password in cleartext. To create the file, you
+  can use the following commands, replacing yourhost, youruser and yourpassword
+  with the right values:
+
+    touch ~/.netrc
+    chmod 600 ~/.netrc
+    echo -e "machine yourhost\nlogin youruser\npassword yourpassword" > ~/.netrc
+
 =cut
 
 use strict;
@@ -111,7 +189,6 @@ use Apache2::RequestUtil qw();
 use Apache2::Const qw(:common :override :cmd_how);
 use APR::Pool ();
 use APR::Table ();
-use Time::HiRes qw(gettimeofday);
 
 # use Apache2::Directive qw();
 
@@ -143,38 +220,30 @@ my @directives = (
     args_how => TAKE1,
     errmsg => 'RedmineCacheCredsMax must be decimal number',
   },
+  {
+    name => 'RedmineGitSmartHttp',
+    req_override => OR_AUTHCFG,
+    args_how => TAKE1,
+  },
 );
 
 sub RedmineDSN { 
   my ($self, $parms, $arg) = @_;
   $self->{RedmineDSN} = $arg;
-  my $query_ = "SELECT 
+  my $query = "SELECT 
                  hashed_password, auth_source_id, permissions
-              FROM members, projects, users, roles
+              FROM members, projects, users, roles, member_roles
               WHERE 
-                projects.id=members.project_id 
+                projects.id=members.project_id
+                AND member_roles.member_id=members.id
                 AND users.id=members.user_id 
-                AND roles.id=members.role_id
+                AND roles.id=member_roles.role_id
                 AND users.status=1 
                 AND login=? 
                 AND identifier=? ";
-  my $query = "
-SELECT
-    users.hashed_password,
-    users.auth_source_id,
-    roles.permissions
-FROM
-    users
-    LEFT JOIN members  ON (users.id = members.user_id)
-    LEFT JOIN roles    ON (members.role_id = roles.id)
-    LEFT JOIN projects ON (members.project_id = projects.id)
-WHERE                                                                                                                                         
-    users.login=?
-    AND users.status=1
-    AND projects.identifier=?";
-    
   $self->{RedmineQuery} = trim($query);
 }
+
 sub RedmineDbUser { set_val('RedmineDbUser', @_); }
 sub RedmineDbPass { set_val('RedmineDbPass', @_); }
 sub RedmineDbWhereClause { 
@@ -189,6 +258,17 @@ sub RedmineCacheCredsMax {
     $self->{RedmineCacheCreds} = APR::Table::make($self->{RedmineCachePool}, $arg);
     $self->{RedmineCacheCredsCount} = 0;
     $self->{RedmineCacheCredsMax} = $arg;
+  }
+}
+
+sub RedmineGitSmartHttp {
+  my ($self, $parms, $arg) = @_;
+  $arg = lc $arg;
+
+  if ($arg eq "yes" || $arg eq "true") {
+    $self->{RedmineGitSmartHttp} = 1;
+  } else {
+    $self->{RedmineGitSmartHttp} = 0;
   }
 }
 
@@ -208,6 +288,23 @@ Apache2::Module::add(__PACKAGE__, \@directives);
 
 my %read_only_methods = map { $_ => 1 } qw/GET PROPFIND REPORT OPTIONS/;
 
+sub request_is_read_only {
+  my ($r) = @_;
+  my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
+
+  # Do we use Git's smart HTTP protocol, or not?
+  if (defined $cfg->{RedmineGitSmartHttp} and $cfg->{RedmineGitSmartHttp}) {
+    my $uri = $r->unparsed_uri;
+    my $location = $r->location;
+    my $is_read_only = $uri !~ m{^$location/*[^/]+/(info/refs\?service=)?git\-receive\-pack$}o;
+    return $is_read_only;
+  } else {
+    # Old behaviour: check the HTTP method
+    my $method = $r->method;
+    return defined $read_only_methods{$method};
+  }
+}
+
 sub access_handler {
   my $r = shift;
 
@@ -216,8 +313,7 @@ sub access_handler {
       return FORBIDDEN;
   }
 
-  my $method = $r->method;
-  return OK unless defined $read_only_methods{$method};
+  return OK unless request_is_read_only($r);
 
   my $project_id = get_project_identifier($r);
 
@@ -241,19 +337,55 @@ sub authen_handler {
   }
 }
 
+# check if authentication is forced
+sub is_authentication_forced {
+  my $r = shift;
+
+  my $dbh = connect_database($r);
+  my $sth = $dbh->prepare(
+    "SELECT value FROM settings where settings.name = 'login_required';"
+  );
+
+  $sth->execute();
+  my $ret = 0;
+  if (my @row = $sth->fetchrow_array) {
+    if ($row[0] eq "1" || $row[0] eq "t") {
+      $ret = 1;
+    }
+  }
+  $sth->finish();
+  undef $sth;
+  
+  $dbh->disconnect();
+  undef $dbh;
+
+  $ret;
+}
+
 sub is_public_project {
     my $project_id = shift;
     my $r = shift;
+    
+    if (is_authentication_forced($r)) {
+      return 0;
+    }
 
     my $dbh = connect_database($r);
     my $sth = $dbh->prepare(
-        "SELECT * FROM projects WHERE projects.identifier=? and projects.is_public=true;"
+        "SELECT is_public FROM projects WHERE projects.identifier = ?;"
     );
 
     $sth->execute($project_id);
-    my $ret = $sth->fetchrow_array ? 1 : 0;
+    my $ret = 0;
+    if (my @row = $sth->fetchrow_array) {
+    	if ($row[0] eq "1" || $row[0] eq "t") {
+    		$ret = 1;
+    	}
+    }
     $sth->finish();
+    undef $sth;
     $dbh->disconnect();
+    undef $dbh;
 
     $ret;
 }
@@ -278,47 +410,27 @@ sub is_member {
   my $redmine_pass = shift;
   my $r = shift;
 
+  my $dbh         = connect_database($r);
   my $project_id  = get_project_identifier($r);
 
   my $pass_digest = Digest::SHA1::sha1_hex($redmine_pass);
 
   my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
-
   my $usrprojpass;
-  my $dbg = 0;
   if ($cfg->{RedmineCacheCredsMax}) {
     $usrprojpass = $cfg->{RedmineCacheCreds}->get($redmine_user.":".$project_id);
     return 1 if (defined $usrprojpass and ($usrprojpass eq $pass_digest));
   }
-
-  my $dbh         = connect_database($r);
-  
-  my $sth;
-
-$sth = $dbh->prepare('SELECT * FROM users');                                                                                                              
-my $start_time11 = gettimeofday;                                                                                                                          
-$sth->execute();                                                                                                                                          
-my $start_time12 = gettimeofday;                                                                                                                          
-$sth->finish();
-
   my $query = $cfg->{RedmineQuery};
-#  my $sth = $dbh->prepare($query);
-  $sth = $dbh->prepare($query);
-
-$dbh->do('set profiling=1');                                                                                                                              
-
-  my $start_time4_5 =  gettimeofday;
+  my $sth = $dbh->prepare($query);
   $sth->execute($redmine_user, $project_id);
-  my $start_time5 = gettimeofday;
 
-$dbh->do('set profiling=0');                                                                                                                              
-  
   my $ret;
   while (my ($hashed_password, $auth_source_id, $permissions) = $sth->fetchrow_array) {
 
       unless ($auth_source_id) {
 	  my $method = $r->method;
-          if ($hashed_password eq $pass_digest && (defined $read_only_methods{$method} || $permissions =~ /:commit_access/) ) {
+          if ($hashed_password eq $pass_digest && ((request_is_read_only($r) && $permissions =~ /:browse_repository/) || $permissions =~ /:commit_access/) ) {
               $ret = 1;
               last;
           }
@@ -329,36 +441,26 @@ $dbh->do('set profiling=0');
           $sthldap->execute($auth_source_id);
           while (my @rowldap = $sthldap->fetchrow_array) {
             my $ldap = Authen::Simple::LDAP->new(
-                host    =>      ($rowldap[2] == 1 || $rowldap[2] eq "t") ? "ldaps://$rowldap[0]" : $rowldap[0],
+                host    =>      ($rowldap[2] eq "1" || $rowldap[2] eq "t") ? "ldaps://$rowldap[0]:$rowldap[1]" : $rowldap[0],
                 port    =>      $rowldap[1],
                 basedn  =>      $rowldap[5],
                 binddn  =>      $rowldap[3] ? $rowldap[3] : "",
                 bindpw  =>      $rowldap[4] ? $rowldap[4] : "",
                 filter  =>      "(".$rowldap[6]."=%s)"
             );
-            $ret = 1 if ($ldap->authenticate($redmine_user, $redmine_pass));
+            my $method = $r->method;
+            $ret = 1 if ($ldap->authenticate($redmine_user, $redmine_pass)
+			 && ((request_is_read_only($r) && $permissions =~ /:browse_repository/) || $permissions =~ /:commit_access/));
+
           }
           $sthldap->finish();
+          undef $sthldap;
       }
   }
-
-  open (MYFILE, '>>/tmp/redmine_svn.log');
-  print MYFILE "[Creds]: $redmine_user:$project_id [prof]: db query: ".($start_time5-$start_time4_5) . "[a/ query]: ".($start_time12-$start_time11)."\n";
-
-$sth->finish();
-$sth = $dbh->prepare('show profile for query 1');                                                                                                         
-$sth->execute();                                                                                                                                          
-my $c = 0;                                                                                                                                                
-while(my @prf = $sth->fetchrow_array){                                                                                                                    
-    print MYFILE join(":\t", @prf) . "\n";                                                                                                                       
-    $c += $prf[1];                                                                                                                                        
-}                                                                                                                                                         
-print MYFILE "Total: " . ($start_time5-$start_time4_5) . "($c)\n"; 
-  
-  close (MYFILE); 
-
   $sth->finish();
+  undef $sth;
   $dbh->disconnect();
+  undef $dbh;
 
   if ($cfg->{RedmineCacheCredsMax} and $ret) {
     if (defined $usrprojpass) {

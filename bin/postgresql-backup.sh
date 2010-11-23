@@ -13,7 +13,7 @@ VER=0.1							# Version Number
 LOGFILE=$BACKUPDIR/$DBHOST-`date +%s`.log		# Logfile Name
 LOGERR=$BACKUPDIR/ERRORS_$DBHOST-`date +%s`.log		# Logfile Name
 BACKUPFILES=""
-OPT="--encoding=utf-8 --clean --no-owner"		# OPT string for use with pg_dump ( see man pg_dump )
+OPT="--encoding=utf-8 --clean"				# OPT string for use with pg_dump ( see man pg_dump )
 PORT="5432"						# Port
 
 LOCATION="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/.."
@@ -126,7 +126,7 @@ keep=3
 
 # If backing up all DBs on the server
 if [ "$DBNAMES" = "all" ]; then
-	DBNAMES="`psql --username=$POSTGRESQL_USERNAME --tuples-only --list --port=$PORT | awk {'print $1'} | grep -v ":" | grep -v "|"`"
+	DBNAMES="`psql --username=$POSTGRESQL_USERNAME --tuples-only --list --port=$PORT | awk {'print $1'}`"
 
 	# If DBs are excluded
 	for exclude in $DBEXCLUDE

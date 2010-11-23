@@ -23,6 +23,3 @@ fi
 
 svn --non-interactive --message "remove old projects test" rm $SVN_URL/$PROJECT/test
 svn --non-interactive --message "copy dev -> test" cp $SVN_URL/$PROJECT/dev $SVN_URL/$PROJECT/test
-
-#sudo -u svn svn --non-interactive merge $SVN_URL/$PROJECT/dev $WWW_PATH/$PROJECT/repo/test --accept theirs-full
-#sudo -u svn svn --non-interactive --message "merge dev -> test" commit $WWW_PATH/$PROJECT/repo

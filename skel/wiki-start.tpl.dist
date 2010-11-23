@@ -52,6 +52,12 @@ https://##FACTORY_HOSTNAME##/svn/##PROJECT##/
 
 login/password совпадают с учетными данными фабрики.
 
+h2. GIT репозиторий
+
+https://##FACTORY_HOSTNAME##/git/##PROJECT##/
+
+login/password совпадают с учетными данными фабрики.
+
 h2. Параметры доступа FTP
 
 <pre>

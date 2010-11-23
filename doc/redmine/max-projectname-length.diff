@@ -1,12 +1,11 @@
-app/views/projects/_form.rhtml:
-
-14c14
-< <br /><em><%= l(:text_length_between, :min => 1, :max => 20) %> <%= l(:text_project_identifier_info) %></em>
----
-> <br /><em><%= l(:text_length_between, :min => 1, :max => 16) %> <%= l(:text_project_identifier_info) %></em>
-
-app/models/project.rb:
-63c63
-<   validates_length_of :identifier, :in => 1..20
----
->   validates_length_of :identifier, :in => 1..16
+--- project.rb.orig     2010-11-23 02:18:29.000000000 +0300
++++ project.rb  2010-11-16 00:33:31.000000000 +0300
+@@ -21,7 +21,7 @@
+   STATUS_ARCHIVED   = 9
+   
+   # Maximum length for project identifiers
+-  IDENTIFIER_MAX_LENGTH = 100
++  IDENTIFIER_MAX_LENGTH = 16
+   
+   # Specific overidden Activities
+   has_many :time_entry_activities

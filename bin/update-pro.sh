@@ -28,4 +28,8 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
     fi
 fi
 
-$SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no $PROJECT.$PRO_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/rel; echo \"revision=\`LANG=ru_RU.UTF-8 /usr/bin/svnversion $WWW_PATH/$PROJECT/repo/rel\`\" > $WWW_PATH/$PROJECT/conf/revision"
+if [ -d "$WWW_PATH/$PROJECT/repo/rel/.git" ]; then
+    $SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no $PROJECT.$PRO_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/rel && git pull; echo \"revision=`cd $WWW_PATH/$PROJECT/repo/rel && git rev-parse heads/rel`\" > $WWW_PATH/$PROJECT/conf/revision"
+else
+    $SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no $PROJECT.$PRO_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/rel; echo \"revision=\`LANG=ru_RU.UTF-8 /usr/bin/svnversion $WWW_PATH/$PROJECT/repo/rel\`\" > $WWW_PATH/$PROJECT/conf/revision"
+fi

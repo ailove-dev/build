@@ -23,7 +23,3 @@ fi
 
 svn --non-interactive --message "remove old projects rel" rm $SVN_URL/$PROJECT/rel
 svn --non-interactive --message "copy dev -> rel" cp $SVN_URL/$PROJECT/dev $SVN_URL/$PROJECT/rel
-
-#sudo -u svn svn --non-interactive merge $SVN_URL/$PROJECT/dev $WWW_PATH/$PROJECT/repo/rel --accept theirs-full
-#sudo -u svn svn --non-interactive resolve $WWW_PATH/$PROJECT/repo/rel --accept theirs-full
-#sudo -u svn svn --non-interactive --message "merge dev -> rel" commit $WWW_PATH/$PROJECT/repo

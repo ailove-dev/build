@@ -74,7 +74,9 @@ fi
 
 SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 		-e 's@##SVN_USERNAME##@$SVN_USERNAME@g' \
+		-e 's@##GIT_USERNAME##@$GIT_USERNAME@g' \
 		-e 's@##SVN_PATH##@$SVN_PATH@g' \
+		-e 's@##GIT_PATH##@$GIT_PATH@g' \
 		-e 's@##WWW_PATH##@$WWW_PATH@g' \
 		-e 's@##PROJECT##@$PROJECT@g' \
 		-e 's@##FACTORY_HOSTNAME##@$FACTORY_HOSTNAME@g' \
@@ -82,12 +84,13 @@ SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 		-e 's@##REL_DOMAIN##@$REL_HOSTNAME@g' \
 		-e 's@##PRO_DOMAIN##@$PRO_HOSTNAME@g' \
 		-e 's@##SVN_URL##@$SVN_URL@g' \
+		-e 's@##GIT_URL##@$GIT_URL@g' \
 		-e 's@##SKEL_PATH##@$SKEL_PATH@g' \
 		-e 's@##PASSWORD##@$PASSWORD@g'"
 
 # if action is not entered
 if [ "$ACTION" != "create" -a "$ACTION" != "remove" -a "$ACTION" != "changepass" -a "$ACTION" != "dump" -a "$ACTION" != "zdump" ]; then
-    echo "use $0 <create|remove> <project>"
+    echo "use $0 <create|gitcreate|remove> <project>"
     echo "use $0 <dump|zdump> <project>"
     echo "use $0 <changepass> <mysql|postgresql>"
     echo "use $0 <init>"
@@ -136,7 +139,7 @@ fi
 
 # if action "[z]dump"
 if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
-    if [ ! -d "$REPOSITORIES_PATH/$PROJECT" ]; then
+    if [ ! -d "$SVN_REPOSITORIES_PATH/$PROJECT" ]; then
 	echo "project $PROJECT doesn't exists"
 	exit 1
     fi
@@ -150,7 +153,7 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
     fi
 
     echo "making dump $PROJECT-dump$TAR_EXT..."
-    svnadmin dump $REPOSITORIES_PATH/$PROJECT --quiet --incremental >$PROJECT.svn
+    svnadmin dump $SVN_REPOSITORIES_PATH/$PROJECT --quiet --incremental >$PROJECT.svn
     mysqldump -u$MYSQL_USERNAME -p$MYSQL_PASSWORD $PROJECT >$PROJECT.mysql
     pg_dump --username=$POSTGRESQL_USERNAME --encoding=utf-8 --clean --no-owner $PROJECT >$PROJECT.pgsql
 
@@ -160,9 +163,9 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
 fi
 
 # if action "create"
-if [ "$ACTION" = "create" ]; then
+if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate"]; then
     # if project already exists
-    if [ -d "$REPOSITORIES_PATH/$PROJECT" -o -d "$WWW_PATH/$PROJECT" -o -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" ]; then
+    if [ -d "$SVN_REPOSITORIES_PATH/$PROJECT" -o -d "$GIT_REPOSITORIES_PATH/$PROJECT" -o -d "$WWW_PATH/$PROJECT" -o -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" ]; then
 	echo "can't create project '$PROJECT' because it already exists."
 	exit 1
     fi
@@ -170,28 +173,60 @@ if [ "$ACTION" = "create" ]; then
     echo "creating project '$PROJECT'"
 
     ########################################################################################################################
-    # create repository
-    su $SU_SUFFIX $WWW_USERNAME -c "svnadmin create $REPOSITORIES_PATH/$PROJECT"
-    # make first svn checkout
-    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet checkout $SVN_URL/$PROJECT $WWW_PATH/$PROJECT/repo"
-    # create svn directories
-    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev"
-    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev/htdocs"
-    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel"
-    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel/htdocs"
-    # make initial commit
-    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet --message \"Initial commit\" commit $WWW_PATH/$PROJECT/repo"
 
-    # copy post-commit hook template
 
-    if [ -f "$SKEL_PATH/post-commit.tpl" ]; then
-	su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl $REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
+    if [ "$ACTION" = "gitcreate"]; then
+        # create repository
+	su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
+	su $SU_SUFFIX $WWW_USERNAME -c "git --bare init"
+	# accept git push without authorization
+	su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
+
+        # create dev&rel branches
+        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
+        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; git add .; git commit -a -m \"initial\"; git push origin master:refs/heads/dev"
+        su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
+
+        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
+        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; git add .; git commit -a -m \"initial\"; git push origin master:refs/heads/rel"
+        su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
+
+	# clone branches
+        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
+
+	# make post-update hook
+	if [ -f "$SKEL_PATH/post-update.tpl" ]; then
+	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+	else
+	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+	fi
+
+	# convert template
+	eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
+
     else
-	su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl.dist $REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
-    fi
+        # create repository
+	su $SU_SUFFIX $WWW_USERNAME -c "svnadmin create $SVN_REPOSITORIES_PATH/$PROJECT"
+        # make first svn checkout
+        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet checkout $SVN_URL/$PROJECT $WWW_PATH/$PROJECT/repo"
+        # create svn directories
+        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev"
+        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev/htdocs"
+        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel"
+        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel/htdocs"
+        # make initial commit
+        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet --message \"Initial commit\" commit $WWW_PATH/$PROJECT/repo"
 
-    # convert template
-    eval sed $SED_FLAGS $SED_SUFFIX $REPOSITORIES_PATH/$PROJECT/hooks/post-commit
+	# make post-commit hook
+	if [ -f "$SKEL_PATH/post-commit.tpl" ]; then
+	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
+	else
+	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl.dist $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
+	fi
+	# convert template
+	eval sed $SED_FLAGS $SED_SUFFIX $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit
+    fi
 
     # create project's structure and give the rights
     mkdir $WWW_PATH/$PROJECT/tmp
@@ -207,10 +242,17 @@ if [ "$ACTION" = "create" ]; then
     chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cache; chmod 777 $WWW_PATH/$PROJECT/cache
 
     # create revision file
-    touch $WWW_PATH/$PROJECT/conf/revision
-    chown $SVN_USERNAME:$SVN_USERNAME $WWW_PATH/$PROJECT/conf/revision
-    chmod 644 $WWW_PATH/$PROJECT/conf/revision
-    echo "revision=`LANG=ru_RU.UTF-8 svnversion $WWW_PATH/$PROJECT/repo/dev`" > $WWW_PATH/$PROJECT/conf/revision
+    if [ "$ACTION" = "gitcreate"]; then
+	touch $WWW_PATH/$PROJECT/conf/revision
+	chown $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT/conf/revision
+	chmod 644 $WWW_PATH/$PROJECT/conf/revision
+	/srv/admin/bin/update-revision.sh $PROJECT dev
+    else
+	touch $WWW_PATH/$PROJECT/conf/revision
+	chown $SVN_USERNAME:$SVN_USERNAME $WWW_PATH/$PROJECT/conf/revision
+	chmod 644 $WWW_PATH/$PROJECT/conf/revision
+	/srv/admin/bin/update-revision.sh $PROJECT
+    fi
 
     # generate crontab
     if [ -d "$CROND_PATH" ]; then
@@ -300,11 +342,12 @@ EOF
 	psql --username=$POSTGRESQL_USERNAME --dbname=postgres --command="ALTER USER \"$PROJECT\" WITH ENCRYPTED PASSWORD '$PASSWORD'"
     fi
 
-    # restart apache
-    apachectl graceful
+    # reload apache
+    service httpd reload
 
+    # reload nginx
     if [ "$NGINX_ENABLED" != "NO" ]; then
-	killall -1 nginx
+	service nginx reload
     fi
 
     echo "project created"
@@ -314,12 +357,13 @@ fi
 if [ "$ACTION" = "remove" ]; then
     echo "removing project '$PROJECT'"
 
-    if [ ! -d "$REPOSITORIES_PATH/$PROJECT" -o ! -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" -o ! -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf" -o ! -d "$WWW_PATH/$PROJECT" ]; then
+    if [ ! -d "$SVN_REPOSITORIES_PATH/$PROJECT" -o ! -d "$GIT_REPOSITORIES_PATH/$PROJECT" -o ! -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" -o ! -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf" -o ! -d "$WWW_PATH/$PROJECT" ]; then
 	echo "some of components doesn't exists but i'll remove it forcibly"
     fi
 
     # remove project's directories and configuration files
-    rm -r $REPOSITORIES_PATH/$PROJECT
+    rm -rf $SVN_REPOSITORIES_PATH/$PROJECT
+    rm -rf $GIT_REPOSITORIES_PATH/$PROJECT
     rm $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
     rm $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
 
@@ -336,7 +380,7 @@ if [ "$ACTION" = "remove" ]; then
 
     # remove mysql username and database
     if [ "$MYSQL_ENABLED" != "NO" ]; then
-cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD
 DROP USER '$PROJECT'@'localhost';
 DROP USER '$PROJECT'@'%';
 DROP DATABASE IF EXISTS \`$PROJECT\`;
@@ -349,15 +393,14 @@ EOF
 	dropuser --username=$POSTGRESQL_USERNAME $PROJECT
     fi
 
-    # restart apache
-    apachectl graceful
+    # reload apache
+    service httpd reload
 
+    # reload nginx
     if [ "$NGINX_ENABLED" != "NO" ]; then
-	killall -1 nginx
+	service nginx reload
     fi
 
     echo "project removed"
     exit 0
 fi
-
-exit 1

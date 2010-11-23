@@ -1,4 +1,4 @@
 #!/bin/sh
 
 LANG=ru_RU.UTF-8 ##SUDO_PATH## -u ##SVN_USERNAME## ##SVN_PATH## --non-interactive update ##WWW_PATH##/##PROJECT##/repo
-/usr/bin/sudo -u svn /srv/admin/bin/update-revision.sh ##PROJECT##
+##SUDO_PATH## -u ##SVN_USERNAME## /srv/admin/bin/update-revision.sh ##PROJECT##
