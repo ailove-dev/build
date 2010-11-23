@@ -262,9 +262,9 @@ projects.each do |project|
     if $svn_url
       begin
 	if $scm == "Git"
-    	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}/repo/.git"}, :key => $api_key)
+    	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}/repo/dev/.git"}, :key => $api_key)
 	    raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
-    	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}/repo/.git");
+    	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}/repo/dev/.git");
     	else
     	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}"}, :key => $api_key)
 	    raise "svn repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "create", project.identifier)
