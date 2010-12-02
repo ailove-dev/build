@@ -282,19 +282,21 @@ projects.each do |project|
 
 	    # secondary works only with initialized projects
 	    if $secondary and not project.respond_to?(:repository)
+	      log("secondary works only with initialized projects")
 	      next
 	    end
 
 	    if $secondary
-	      raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-secondary", project.identifier)
+	      raise "git repository creation failed (#{repos_path}, #{project.identifier}, #{project.respond_to?(:repository)})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-secondary", project.identifier)
+	      exit 1
 	    end
 
 	    if $bare
-	      raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-bare", project.identifier)
+	      raise "git repository creation failed (#{repos_path}, #{project.identifier})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-bare", project.identifier)
 	    end
 
 	    if not $secondary and not $bare
-	      raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
+	      raise "git repository creation failed (#{repos_path}, #{project.identifier})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
 	    end
 
     	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}/repo/dev/.git");
