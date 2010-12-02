@@ -34,6 +34,8 @@
 #                             reposman is able to create Git and Subversion
 #                             repositories. For all other kind, you must specify
 #                             a --command option
+#   -b, --bare                make bare repository
+#   -2, --secondary           run at secondary
 #   -u, --url=URL             the base url Redmine will use to access your
 #                             repositories. This option is used to automatically
 #                             register the repositories in Redmine. The project
@@ -78,6 +80,8 @@ opts = GetoptLong.new(
                       ['--url',          '-u', GetoptLong::REQUIRED_ARGUMENT],
                       ['--command' ,     '-c', GetoptLong::REQUIRED_ARGUMENT],
                       ['--scm',                GetoptLong::REQUIRED_ARGUMENT],
+                      ['--bare',         '-b', GetoptLong::NO_ARGUMENT],
+                      ['--secondary',    '-2', GetoptLong::NO_ARGUMENT],
                       ['--test',         '-t', GetoptLong::NO_ARGUMENT],
                       ['--force',        '-f', GetoptLong::NO_ARGUMENT],
                       ['--verbose',      '-v', GetoptLong::NO_ARGUMENT],
@@ -96,6 +100,7 @@ $use_groupid  = true
 $svn_url      = false
 $test         = false
 $force        = false
+$bare         = false
 $scm          = 'Subversion'
 
 def log(text, options={})
@@ -141,6 +146,8 @@ begin
     when '--command';        $command =      arg.dup
     when '--verbose';        $verbose += 1
     when '--test';           $test = true
+    when '--bare';           $bare = true
+    when '--secondary';      $secondary = true
     when '--force';          $force = true
     when '--version';        puts Version; exit
     when '--help';           RDoc::usage
@@ -153,6 +160,10 @@ end
 
 if $test
   log("running in test mode")
+end
+
+if $bare
+  log("making bare repository")
 end
 
 # Make sure command is overridden if SCM vendor is not handled internally (for the moment Subversion and Git)
@@ -248,9 +259,11 @@ projects.each do |project|
   if not File.directory?(repos_path)
     # if repository is already declared in redmine, we don't create
     # unless user use -f with reposman
-    if $force == false and project.respond_to?(:repository)
-      log("\trepository for project #{project.identifier} already exists in Redmine", :level => 1)
-      next
+    if $force == false and $secondary == false and project.respond_to?(:repository)
+	if $scm != "Git"
+          log("\trepository for project #{project.identifier} already exists in Redmine", :level => 1)
+          next
+        end
     end
 
     if $test
@@ -262,8 +275,28 @@ projects.each do |project|
     if $svn_url
       begin
 	if $scm == "Git"
-    	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}/repo/dev/.git"}, :key => $api_key)
-	    raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
+	    # fill redmine repository settings if it's empty & not secondary
+	    if not $secondary
+    	      project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}/repo/dev/.git"}, :key => $api_key)
+    	    end
+
+	    # secondary works only with initialized projects
+	    if $secondary and not project.respond_to?(:repository)
+	      next
+	    end
+
+	    if $secondary
+	      raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-secondary", project.identifier)
+	    end
+
+	    if $bare
+	      raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-bare", project.identifier)
+	    end
+
+	    if not $secondary and not $bare
+	      raise "git repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
+	    end
+
     	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}/repo/dev/.git");
     	else
     	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}"}, :key => $api_key)
