@@ -266,7 +266,7 @@ EOF
     chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cache; chmod 777 $WWW_PATH/$PROJECT/cache
 
     # create revision file
-    if [ "$ACTION" = "gitcreate" ]; then
+    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
 	touch $WWW_PATH/$PROJECT/conf/revision
 	chown $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT/conf/revision
 	chmod 644 $WWW_PATH/$PROJECT/conf/revision
