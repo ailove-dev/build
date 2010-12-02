@@ -346,7 +346,7 @@ CREATE DATABASE IF NOT EXISTS \`$PROJECT\`;
 GRANT ALL PRIVILEGES ON \`$PROJECT\`.* TO '$PROJECT'@'localhost';
 GRANT ALL PRIVILEGES ON \`$PROJECT\`.* TO '$PROJECT'@'%';
 EOF
-
+    fi
 
     # create postgresql username and database, grant access
     if [ "$POSTGRESQL_ENABLED" != "NO" ]; then
