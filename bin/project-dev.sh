@@ -90,7 +90,7 @@ SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 
 # if action is not entered
 if [ "$ACTION" != "create" -a "$ACTION" != "gitcreate" -a "$ACTION" != "remove" -a "$ACTION" != "changepass" -a "$ACTION" != "dump" -a "$ACTION" != "zdump" ]; then
-    echo "use $0 <create|gitcreate|remove> <project>"
+    echo "use $0 <create|gitcreate|gitcreate-bare|remove> <project>"
     echo "use $0 <dump|zdump> <project>"
     echo "use $0 <changepass> <mysql|postgresql>"
     echo "use $0 <init>"
@@ -167,7 +167,7 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
 fi
 
 # if action "create"
-if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
+if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" ]; then
     # if project already exists
     if [ -d "$SVN_REPOSITORIES_PATH/$PROJECT" -o -d "$GIT_REPOSITORIES_PATH/$PROJECT" -o -d "$WWW_PATH/$PROJECT" -o -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" ]; then
 	echo "can't create project '$PROJECT' because it already exists."
@@ -178,8 +178,20 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
 
     ########################################################################################################################
 
+if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
+    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
+else
+    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
+fi
 
-    if [ "$ACTION" = "gitcreate" ]; then
+WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
+cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
+SET NAMES UTF8;
+CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
+EOF
+    fi
+
+    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" ]; then
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
 	cd $GIT_REPOSITORIES_PATH/$PROJECT
@@ -196,20 +208,23 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" ]; then
         su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/rel"
         su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
 
-	# clone branches
-        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
-        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
-
 	# make post-update hook
 	if [ -f "$SKEL_PATH/post-update.tpl" ]; then
 	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
 	else
 	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
 	fi
-
-	# convert template
+	# convert hook template
 	eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 
+	# exit if we need only repository creation
+	if [ "$ACTION" = "gitcreate-bare" ]; then
+	    exit 0;
+	fi
+
+	# clone branches
+	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
     else
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "svnadmin create $SVN_REPOSITORIES_PATH/$PROJECT"
@@ -327,18 +342,6 @@ GRANT ALL PRIVILEGES ON \`$PROJECT\`.* TO '$PROJECT'@'localhost';
 GRANT ALL PRIVILEGES ON \`$PROJECT\`.* TO '$PROJECT'@'%';
 EOF
 
-if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
-    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
-else
-    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
-fi
-
-WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
-cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
-SET NAMES UTF8;
-CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
-EOF
-    fi
 
     # create postgresql username and database, grant access
     if [ "$POSTGRESQL_ENABLED" != "NO" ]; then
