@@ -90,7 +90,7 @@ SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 
 # if action is not entered
 if [ "$ACTION" != "create" -a "$ACTION" != "gitcreate" -a "$ACTION" != "remove" -a "$ACTION" != "changepass" -a "$ACTION" != "dump" -a "$ACTION" != "zdump" ]; then
-    echo "use $0 <create|gitcreate|gitcreate-bare|remove> <project>"
+    echo "use $0 <create|gitcreate|gitcreate-bare|gitcreate-secondary|remove> <project>"
     echo "use $0 <dump|zdump> <project>"
     echo "use $0 <changepass> <mysql|postgresql>"
     echo "use $0 <init>"
@@ -167,7 +167,7 @@ if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
 fi
 
 # if action "create"
-if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" ]; then
+if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
     # if project already exists
     if [ -d "$SVN_REPOSITORIES_PATH/$PROJECT" -o -d "$GIT_REPOSITORIES_PATH/$PROJECT" -o -d "$WWW_PATH/$PROJECT" -o -f "$APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf" ]; then
 	echo "can't create project '$PROJECT' because it already exists."
@@ -191,35 +191,39 @@ CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
 EOF
     fi
 
-    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" ]; then
-        # create repository
-	su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
-	cd $GIT_REPOSITORIES_PATH/$PROJECT
-	su $SU_SUFFIX $WWW_USERNAME -c "git --bare init"
-	# accept git push without authorization
-	su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
+    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
 
-        # create dev&rel branches
-        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
-        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/dev"
-        su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
+	# don't create git repository on secondary
+	if [ ! "$ACTION" = "gitcreate-secondary" ]; then
+	    # create repository
+	    su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
+	    cd $GIT_REPOSITORIES_PATH/$PROJECT
+	    su $SU_SUFFIX $WWW_USERNAME -c "git --bare init"
+	    # accept git push without authorization
+	    su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
 
-        su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
-        su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/rel"
-        su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
+    	    # create dev&rel branches
+    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/dev"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
-	# make post-update hook
-	if [ -f "$SKEL_PATH/post-update.tpl" ]; then
-	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
-	else
-	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/rel"
+	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
+
+	    # make post-update hook
+	    if [ -f "$SKEL_PATH/post-update.tpl" ]; then
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+	    else
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+	    fi
+	    # convert hook template
+	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 	fi
-	# convert hook template
-	eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 
-	# exit if we need only repository creation
+	# exit if we need only git repository creation
 	if [ "$ACTION" = "gitcreate-bare" ]; then
-	    exit 0;
+	    exit 0
 	fi
 
 	# clone branches
