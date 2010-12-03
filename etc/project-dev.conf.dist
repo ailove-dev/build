@@ -1,4 +1,5 @@
 DEV_HOSTNAME="dev.ailove.ru"
+DEV2_HOSTNAME="dev2.ailove.ru"
 FACTORY_HOSTNAME="factory.ailove.ru"
 REL_HOSTNAME="rel.ailove.ru"
 PRO_HOSTNAME="pro.ailove.ru"
