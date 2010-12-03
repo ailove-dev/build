@@ -18,7 +18,7 @@ else
 fi
 
 if [ -z "$PROJECT" ]; then
-    echo "use $0 <project>"
+    echo "use $0 <project> [git branch]"
     exit 0
 fi
 
