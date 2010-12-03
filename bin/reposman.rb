@@ -176,6 +176,7 @@ if $command.nil?
 end
 
 $svn_url += "/" if $svn_url and not $svn_url.match(/\/$/)
+$svn-dir += "/" if $svn-dir and not $svn-dir.match(/\/$/)
 
 if ($redmine_host.empty? or $repos_base.empty?)
   RDoc::usage
@@ -277,7 +278,7 @@ projects.each do |project|
 	if $scm == "Git"
 	    # fill redmine repository settings if it's empty & not secondary
 	    if not $secondary
-    	      project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}/repo/dev/.git"}, :key => $api_key)
+    	      project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn-dir}#{project.identifier}"}, :key => $api_key)
     	    end
 
 	    # secondary works only with initialized projects
@@ -287,7 +288,7 @@ projects.each do |project|
 	    end
 
 	    # create only git projects
-	    if $secondary and not project.repository.url.match(/^.*\/.git$/)
+	    if $secondary and not project.repository.url.match(/^.*\/git\/#{project.identifier}$/)
 	      next
 	    end
 
@@ -303,7 +304,7 @@ projects.each do |project|
 	      raise "git repository creation failed (#{repos_path}, #{project.identifier})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate", project.identifier)
 	    end
 
-    	    log("\trepository #{repos_path} registered in Redmine with url #{$svn_url}#{project.identifier}/repo/dev/.git");
+    	    log("\trepository #{repos_path} registered in Redmine with url #{$svn-dir}#{project.identifier}");
     	else
     	    project.post(:repository, :vendor => $scm, :repository => {:url => "#{$svn_url}#{project.identifier}"}, :key => $api_key)
 	    raise "svn repository creation failed (#{repos_path})" unless system("/srv/admin/bin/project-dev.sh", "create", project.identifier)
