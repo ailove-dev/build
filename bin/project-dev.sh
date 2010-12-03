@@ -220,9 +220,10 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	if [ "$ACTION" = "gitcreate-bare" ]; then
 	    if [ "$MYSQL_ENABLED" != "NO" ]; then
 cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
-INSERT INTO rr (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
+INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
 (1, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME'),
 (2, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME');
+UPDATE \`soa\` SET serial+1;
 EOF
 	    fi
 	    exit 0
