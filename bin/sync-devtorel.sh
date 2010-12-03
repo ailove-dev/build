@@ -22,12 +22,12 @@ exit 1
 fi
 
 if [ -d "$WWW_PATH/$PROJECT/repo/rel/.git" ]; then
-    cd $WWW_PATH/$PROJECT/repo/rel
-    git merge origin/dev
-    TAG=$((`git tag -l | wc -l`+1));
-    git tag $TAG;
-    echo "tag \"$TAG\" created"
-    git push --tags
+#    cd $WWW_PATH/$PROJECT/repo/rel
+#    git merge origin/dev
+#    TAG=$((`git tag -l | wc -l`+1));
+#    git tag $TAG;
+#    echo "tag \"$TAG\" created"
+#    git push --tags
 else
     svn --non-interactive --message "remove old projects rel" rm $SVN_URL/$PROJECT/rel
     svn --non-interactive --message "copy dev -> rel" cp $SVN_URL/$PROJECT/dev $SVN_URL/$PROJECT/rel
