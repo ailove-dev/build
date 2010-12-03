@@ -180,6 +180,8 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
     if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
 
+	cd /
+
 	# don't create git repository on secondary
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    # create repository
