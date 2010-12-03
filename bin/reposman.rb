@@ -286,9 +286,13 @@ projects.each do |project|
 	      next
 	    end
 
+	    # create only git projects
+	    if not project.repository.url.match(/^.*\/.git$/)
+	      next
+	    end
+
 	    if $secondary
-	      raise "git repository creation failed (#{repos_path}, #{project.identifier}, #{project.respond_to?(:repository)})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-secondary", project.identifier)
-	      exit 1
+	      raise "git repository creation failed (#{repos_path}, #{project.identifier})" unless system("/srv/admin/bin/project-dev.sh", "gitcreate-secondary", project.identifier)
 	    end
 
 	    if $bare
