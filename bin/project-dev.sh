@@ -211,6 +211,10 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 	fi
 
+	# clone branches
+	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
+
 	# exit if we need only git repository creation
 	if [ "$ACTION" = "gitcreate-bare" ]; then
 	    if [ "$MYSQL_ENABLED" != "NO" ]; then
@@ -223,11 +227,6 @@ EOF
 	    fi
 	    exit 0
 	fi
-
-	# clone branches
-	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
-	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
-
     else
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "svnadmin create $SVN_REPOSITORIES_PATH/$PROJECT"
