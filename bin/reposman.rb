@@ -277,7 +277,8 @@ projects.each do |project|
 	if $scm == "Git"
 	    # fill redmine repository settings if it's empty & not secondary
 	    if not $secondary
-    	      project.post(:repository, :vendor => $scm, :repository => {:url => "#{repos_path}"}, :key => $api_key)
+	      project_path = File.join($svn_url, project.identifier).gsub(File::SEPARATOR, File::ALT_SEPARATOR || File::SEPARATOR)
+    	      project.post(:repository, :vendor => $scm, :repository => {:url => "#{project_path}"}, :key => $api_key)
     	    end
 
 	    # secondary works only with initialized projects

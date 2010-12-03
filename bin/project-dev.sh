@@ -211,6 +211,8 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 	fi
 
+	mkdir $WWW_PATH/$PROJECT
+
 	# exit if we need only git repository creation
 	if [ "$ACTION" = "gitcreate-bare" ]; then
 	    if [ "$MYSQL_ENABLED" != "NO" ]; then
