@@ -29,7 +29,7 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
 fi
 
 if [ -d "$WWW_PATH/$PROJECT/repo/test/.git" ]; then
-    $SUDO_PATH -u $GIT_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/test && git pull; echo \"revision=`cd $WWW_PATH/$PROJECT/repo/test && git rev-parse heads/test`\" > $WWW_PATH/$PROJECT/conf/revision"
+    $SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/test && git pull; echo \"revision=`cd $WWW_PATH/$PROJECT/repo/test && git rev-parse heads/test`\" > $WWW_PATH/$PROJECT/conf/revision"
 else
-    $SUDO_PATH -u $SVN_USERNAME /usr/bin/ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/test; echo \"revision=\`LANG=ru_RU.UTF-8 /usr/bin/svnversion $WWW_PATH/$PROJECT/repo/test\`\" > $WWW_PATH/$PROJECT/conf/revision"
+    $SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/test; echo \"revision=\`LANG=ru_RU.UTF-8 svnversion $WWW_PATH/$PROJECT/repo/test\`\" > $WWW_PATH/$PROJECT/conf/revision"
 fi
