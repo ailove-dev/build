@@ -219,7 +219,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	# exit if we need only git repository creation
 	if [ "$ACTION" = "gitcreate-bare" ]; then
 	    if [ "$MYSQL_ENABLED" != "NO" ]; then
-cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
 (1, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME'),
 (2, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME');
@@ -259,7 +259,7 @@ EOF
 	fi
 
 WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
-cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
 SET NAMES UTF8;
 CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
 EOF
@@ -349,7 +349,7 @@ EOF
 
     # create mysql database and grant access with temporary file
     if [ "$MYSQL_ENABLED" != "NO" ]; then
-cat << EOF | mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD
 SET NAMES UTF8;
 CREATE USER '$PROJECT'@'localhost' IDENTIFIED BY '$PASSWORD';
 GRANT USAGE ON *.* TO '$PROJECT'@'localhost' IDENTIFIED BY '$PASSWORD' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
