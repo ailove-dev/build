@@ -210,6 +210,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 	fi
 
+	mkdir -p $WWW_PATH/$PROJECT
 	chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
 
 	# clone branches
