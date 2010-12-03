@@ -287,7 +287,7 @@ projects.each do |project|
 	    end
 
 	    # create only git projects
-	    if not project.repository.url.match(/^.*\/.git$/)
+	    if $secondary and not project.repository.url.match(/^.*\/.git$/)
 	      next
 	    end
 
