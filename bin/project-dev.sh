@@ -180,7 +180,8 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
     if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
 
-	cd /
+	mkdir -p $WWW_PATH/$PROJECT && cd $WWW_PATH/$PROJECT
+	chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
 
 	# don't create git repository on secondary
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
@@ -210,8 +211,6 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 	fi
 
-	mkdir -p $WWW_PATH/$PROJECT
-	chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
 
 	# clone branches
 	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
