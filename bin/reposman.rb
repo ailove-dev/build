@@ -162,10 +162,6 @@ if $test
   log("running in test mode")
 end
 
-if $bare
-  log("making bare repository")
-end
-
 # Make sure command is overridden if SCM vendor is not handled internally (for the moment Subversion and Git)
 if $command.nil?
   begin
