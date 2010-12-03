@@ -3,7 +3,7 @@
 PATH=/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:$PATH
 
 REF=`echo $1 | awk --field-separator="/" '{print $2}'`
-if [ $REF = "branches" ]; then
+if [ $REF = "branches" -o $REF = "heads" ]; then
     BRANCH=`echo $1 | awk --field-separator="/" '{print $3}'`
     cd ##WWW_PATH##/##PROJECT##/repo/$BRANCH
     GIT_SSL_NO_VERIFY=true ##SUDO_PATH## -u ##GIT_USERNAME## ##GIT_PATH## pull
