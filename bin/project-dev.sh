@@ -181,7 +181,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
     if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
 
 	# don't create git repository on secondary
-	if [ ! "$ACTION" = "gitcreate-secondary" ]; then
+	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    # create repository
 	    su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
 	    cd $GIT_REPOSITORIES_PATH/$PROJECT
@@ -208,14 +208,14 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 	fi
 
+	# clone branches
+	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
+
 	# exit if we need only git repository creation
 	if [ "$ACTION" = "gitcreate-bare" ]; then
 	    exit 0
 	fi
-
-	# clone branches
-	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
-	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
     else
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "svnadmin create $SVN_REPOSITORIES_PATH/$PROJECT"
@@ -239,7 +239,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	eval sed $SED_FLAGS $SED_SUFFIX $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit
     fi
 
-    if [ ! "$ACTION" = "gitcreate-secondary" ]; then
+    if [ "$ACTION" != "gitcreate-secondary" ]; then
 	if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
 	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
 	else
