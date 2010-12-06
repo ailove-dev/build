@@ -29,6 +29,7 @@ if [ -d "$WWW_PATH/$PROJECT/repo/rel/.git" ]; then
 #    echo "tag \"$TAG\" created"
 #    git push
 #    git push --tags
+    echo
 else
     svn --non-interactive --message "remove old projects rel" rm $SVN_URL/$PROJECT/rel
     svn --non-interactive --message "copy dev -> rel" cp $SVN_URL/$PROJECT/dev $SVN_URL/$PROJECT/rel
