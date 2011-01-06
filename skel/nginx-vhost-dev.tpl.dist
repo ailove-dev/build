@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name ##PROJECT##.##DEV_DOMAIN##;
+    server_name ~^(.*)\.##PROJECT##.##DEV_DOMAIN_PCRE##$ ##PROJECT##.##DEV_DOMAIN##;
 
     access_log ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-acc main;
     error_log ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-err;

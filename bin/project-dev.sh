@@ -72,6 +72,8 @@ else
     SU_SUFFIX="--shell=/bin/sh"
 fi
 
+DEV_HOSTNAME_PCRE=`echo $DEV_HOSTNAME | sed 's:\.:\\\.:g'`
+
 SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 		-e 's@##SVN_USERNAME##@$SVN_USERNAME@g' \
 		-e 's@##GIT_USERNAME##@$GIT_USERNAME@g' \
@@ -81,6 +83,7 @@ SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 		-e 's@##PROJECT##@$PROJECT@g' \
 		-e 's@##FACTORY_HOSTNAME##@$FACTORY_HOSTNAME@g' \
 		-e 's@##DEV_DOMAIN##@$DEV_HOSTNAME@g' \
+		-e 's@##DEV_DOMAIN_PCRE##@$DEV_HOSTNAME_PCRE@g' \
 		-e 's@##REL_DOMAIN##@$REL_HOSTNAME@g' \
 		-e 's@##PRO_DOMAIN##@$PRO_HOSTNAME@g' \
 		-e 's@##SVN_URL##@$SVN_URL@g' \
@@ -235,7 +238,6 @@ EOF
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
 (1, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME'),
-(2, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME'),
 (1, '*.$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME');
 UPDATE \`soa\` SET serial=serial+1;
 EOF
