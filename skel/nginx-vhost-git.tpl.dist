@@ -1,6 +1,11 @@
 server {
     listen 80;
-    server_name ##PROJECT##.##DEV_DOMAIN##;
+    server_name ~^(.*)\.##PROJECT##.##DEV_DOMAIN_PCRE##$ ##PROJECT##.##DEV_DOMAIN##;
+    set $branch $1;
+
+    if ($branch = "") {
+	set $branch "master";
+    }
 
     access_log ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-acc main;
     error_log ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-err;
@@ -14,7 +19,7 @@ server {
     }
 
     location ~* \.(jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2|doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|avi|djvu|mp3)$ {
-	root ##WWW_PATH##/##PROJECT##/repo/dev/htdocs;
+	root ##WWW_PATH##/##PROJECT##/repo/$branch/htdocs;
     }
 
     include vhost.inc.conf;
