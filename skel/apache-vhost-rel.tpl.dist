@@ -1,7 +1,6 @@
 <VirtualHost *>
     DocumentRoot ##WWW_PATH##/##PROJECT##/repo/rel/htdocs
     ServerName ##PROJECT##.##REL_DOMAIN##
-    #CustomLog ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##REL_DOMAIN##-acc combined
     ErrorLog ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##REL_DOMAIN##-err
 
     Alias /data/ ##WWW_PATH##/##PROJECT##/data/
