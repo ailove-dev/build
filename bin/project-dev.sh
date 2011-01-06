@@ -200,9 +200,9 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
     	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/dev"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
-    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
-    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/rel"
-	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
+    	    #su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
+    	    #su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/rel"
+	    #su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
 
 	    # make post-update hook
 	    if [ -f "$SKEL_PATH/post-update.tpl" ]; then
@@ -216,7 +216,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
 	# clone branches
 	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
-	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
+	#su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
 
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
@@ -285,7 +285,7 @@ EOF
 	touch $WWW_PATH/$PROJECT/conf/revision
 	chown $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT/conf/revision
 	chmod 644 $WWW_PATH/$PROJECT/conf/revision
-	/srv/admin/bin/update-revision.sh $PROJECT dev
+	/srv/admin/bin/update-revision.sh $PROJECT master
     else
 	touch $WWW_PATH/$PROJECT/conf/revision
 	chown $SVN_USERNAME:$SVN_USERNAME $WWW_PATH/$PROJECT/conf/revision
@@ -310,43 +310,68 @@ EOF
     eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/database
     chown $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/conf/database
 
-    # copy and convert dev & rel virtualhost templates
-    if [ -f "$SKEL_PATH/apache-vhost-dev.tpl" ]; then
-	cp $SKEL_PATH/apache-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/apache-dev.conf
-    else
-	cp $SKEL_PATH/apache-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/apache-dev.conf
-    fi
-    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-dev.conf
-
-    if [ -f "$SKEL_PATH/apache-vhost-rel.tpl" ]; then
-	cp $SKEL_PATH/apache-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/apache-rel.conf
-    else
-	cp $SKEL_PATH/apache-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/apache-rel.conf
-    fi
-    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-rel.conf
-
-    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache-dev.conf $WWW_PATH/$PROJECT/conf/apache-rel.conf
-    ln -s $WWW_PATH/$PROJECT/conf/apache-dev.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-    ln -s $WWW_PATH/$PROJECT/conf/apache-rel.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
-
-    if [ "$NGINX_ENABLED" != "NO" ]; then
-	if [ -f "$SKEL_PATH/nginx-vhost-dev.tpl" ]; then
-	    cp $SKEL_PATH/nginx-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
+	# copy and convert git virtualhost template
+	if [ -f "$SKEL_PATH/apache-vhost-git.tpl" ]; then
+	    cp $SKEL_PATH/apache-vhost-git.tpl $WWW_PATH/$PROJECT/conf/apache.conf
 	else
-	    cp $SKEL_PATH/nginx-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+	    cp $SKEL_PATH/apache-vhost-git.tpl.dist $WWW_PATH/$PROJECT/conf/apache.conf
 	fi
-	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache.conf
 
-	if [ -f "$SKEL_PATH/nginx-vhost-rel.tpl" ]; then
-	    cp $SKEL_PATH/nginx-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache.conf
+	ln -s $WWW_PATH/$PROJECT/conf/apache.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+
+	if [ "$NGINX_ENABLED" != "NO" ]; then
+	    if [ -f "$SKEL_PATH/nginx-vhost-git.tpl" ]; then
+		cp $SKEL_PATH/nginx-vhost-git.tpl $WWW_PATH/$PROJECT/conf/nginx.conf
+	    else
+		cp $SKEL_PATH/nginx-vhost-git.tpl.dist $WWW_PATH/$PROJECT/conf/nginx.conf
+	    fi
+	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx.conf
+
+	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx.conf
+	    ln -s $WWW_PATH/$PROJECT/conf/nginx.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+	fi
+    else
+	# copy and convert dev & rel virtualhost templates
+	if [ -f "$SKEL_PATH/apache-vhost-dev.tpl" ]; then
+	    cp $SKEL_PATH/apache-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/apache-dev.conf
 	else
-	    cp $SKEL_PATH/nginx-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	    cp $SKEL_PATH/apache-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/apache-dev.conf
 	fi
-	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-dev.conf
 
-	chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx-dev.conf $WWW_PATH/$PROJECT/conf/nginx-rel.conf
-	ln -s $WWW_PATH/$PROJECT/conf/nginx-dev.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-	ln -s $WWW_PATH/$PROJECT/conf/nginx-rel.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+	if [ -f "$SKEL_PATH/apache-vhost-rel.tpl" ]; then
+	    cp $SKEL_PATH/apache-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/apache-rel.conf
+	else
+	    cp $SKEL_PATH/apache-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/apache-rel.conf
+	fi
+	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-rel.conf
+
+	chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache-dev.conf $WWW_PATH/$PROJECT/conf/apache-rel.conf
+	ln -s $WWW_PATH/$PROJECT/conf/apache-dev.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+	ln -s $WWW_PATH/$PROJECT/conf/apache-rel.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+
+	if [ "$NGINX_ENABLED" != "NO" ]; then
+	    if [ -f "$SKEL_PATH/nginx-vhost-dev.tpl" ]; then
+		cp $SKEL_PATH/nginx-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+	    else
+		cp $SKEL_PATH/nginx-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+	    fi
+	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+
+	    if [ -f "$SKEL_PATH/nginx-vhost-rel.tpl" ]; then
+		cp $SKEL_PATH/nginx-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	    else
+		cp $SKEL_PATH/nginx-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	    fi
+	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+
+	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx-dev.conf $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	    ln -s $WWW_PATH/$PROJECT/conf/nginx-dev.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+	    ln -s $WWW_PATH/$PROJECT/conf/nginx-rel.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+	fi
     fi
 
     # create mysql database and grant access with temporary file

@@ -1,0 +1,33 @@
+<VirtualHost *>
+    DocumentRoot ##WWW_PATH##/##PROJECT##/repo/master/htdocs
+    ServerName ##PROJECT##.##DEV_DOMAIN##
+    ServerAlias *.##PROJECT##.##DEV_DOMAIN##
+    ErrorLog ##WWW_PATH##/##PROJECT##/logs/##PROJECT##.##DEV_DOMAIN##-err
+
+    RewriteEngine On
+    RewriteMap lowercase int:tolower
+    RewriteCond %{REQUEST_URI} !^/data/
+    RewriteCond %{HTTP_HOST} ^(.*)\.##PROJECT##.##DEV_DOMAIN_PCRE##$
+    RewriteCond %1 !^$
+    RewriteRule ^(.*)$ ##WWW_PATH##/##PROJECT##/repo/%1/htdocs/$1 [L]
+    RewriteCond %1 ^$
+    RewriteRule ^(.*)$ ##WWW_PATH##/##PROJECT##/repo/master/htdocs/$1 [L]
+
+    Alias /data/ ##WWW_PATH##/##PROJECT##/data/
+
+    <Location />
+        php_admin_value open_basedir "##WWW_PATH##/##PROJECT##"
+        php_admin_value upload_tmp_dir "##WWW_PATH##/##PROJECT##/tmp"
+        php_admin_value session.save_path "##WWW_PATH##/##PROJECT##/tmp"
+	php_admin_value memory_limit "256M"
+	php_value post_max_size "256M"
+	php_value upload_max_filesize "256M"
+    </Location>
+
+    <Directory ##WWW_PATH##/##PROJECT##/repo>
+	Options Includes FollowSymLinks MultiViews
+	AllowOverride All
+	Order allow,deny
+	Allow from all
+    </Directory>
+</VirtualHost>
