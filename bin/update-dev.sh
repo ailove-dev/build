@@ -21,6 +21,10 @@ if [ -z "$PROJECT" ]; then
     exit 0
 fi
 
+if [ ! -d $WWW_PATH/$PROJECT/repo/master ]; then
+    GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master
+fi
+
 cd $WWW_PATH/$PROJECT/repo/master
 GIT_SSL_NO_VERIFY=true git pull
 
