@@ -33,7 +33,7 @@ do
     BRANCH=`echo $line | awk --field-separator=/ '{print $3}'`
 
     if [ "$BRANCH" = "master" ]; then
-	/srv/admin/bin/update-revision.sh git-test $BRANCH
+	/srv/admin/bin/update-revision.sh $PROJECT $BRANCH
 	exit
     fi
 
