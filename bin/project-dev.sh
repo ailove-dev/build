@@ -200,10 +200,6 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
     	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/dev"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
-    	    #su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-rel-branch"
-    	    #su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-rel-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/rel"
-	    #su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-rel-branch"
-
 	    # make post-update hook
 	    if [ -f "$SKEL_PATH/post-update.tpl" ]; then
 		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
@@ -212,6 +208,15 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    fi
 	    # convert hook template
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
+
+	    # make update hook
+	    if [ -f "$SKEL_PATH/update.tpl" ]; then
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
+	    else
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
+	    fi
+	    # convert hook template
+	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update
 	fi
 
 	# clone branches
