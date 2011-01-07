@@ -223,9 +223,11 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update
 	fi
 
-	# clone branches
-    	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
-	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	if [ "$ACTION" != "gitcreate-bare" ]; then
+	    # clone branches
+    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
+	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	fi
 
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
