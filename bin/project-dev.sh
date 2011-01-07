@@ -196,8 +196,12 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
 
     	    # create dev branch
+    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-master-branch"
+
     	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
-    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/dev"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; git push origin master:refs/heads/dev"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
 	    # make post-update hook
