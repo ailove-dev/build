@@ -36,12 +36,15 @@ fi
 #done
 
 if [ "$ACTION" = "delete" ]; then
-    mv $WWW_PATH/$PROJECT/repo/$BRANCH $WWW_PATH/$PROJECT/$BRANCH.removed_by_git
+    mv $WWW_PATH/$PROJECT/repo/$BRANCH $WWW_PATH/$PROJECT/repo/$BRANCH.removed_by_git
+    if [ ! -d $WWW_PATH/$PROJECT/repo/$BRANCH.removed_by_git ]; then
+	mkdir $WWW_PATH/$PROJECT/repo/$BRANCH.removed_by_git
+    fi
     exit
 fi
 
-if [ -d $WWW_PATH/$PROJECT/$BRANCH.removed_by_git ]; then
-    rm -rf $WWW_PATH/$PROJECT/$BRANCH.removed_by_git
+if [ -d $WWW_PATH/$PROJECT/repo/$BRANCH.removed_by_git ]; then
+    rm -rf $WWW_PATH/$PROJECT/repo/$BRANCH.removed_by_git
     exit
 fi
 
