@@ -195,9 +195,6 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    # accept git push without authorization
 	    su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
 
-	    # clone master
-    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
-
     	    # create dev branch
     	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
     	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master:refs/heads/dev"
@@ -223,8 +220,8 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	fi
 
 	# clone branches
+    	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
 	su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
-	#su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch rel $WWW_PATH/$PROJECT/repo/rel"
 
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
