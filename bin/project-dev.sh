@@ -197,7 +197,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
     	    # create dev branch
     	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
-    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-master-branch"
 
     	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
