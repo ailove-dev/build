@@ -31,11 +31,13 @@ BRANCH=`echo $1 | awk --field-separator="/" '{print $3}'`
 case "$refname","$newrev_type" in
 	refs/heads/*,delete)
 		# delete branch
-		rm -rf ##WWW_PATH##/##PROJECT##/repo/$BRANCH
+		##SUDO_PATH## -u ##GIT_USERNAME## /srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH delete
+		# ##SUDO_PATH## -u ##GIT_USERNAME## ssh -o StrictHostKeyChecking=no ##PROJECT##.##DEV_DOMAIN## "/srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH delete"
 		;;
 	refs/remotes/*,delete)
 		# delete tracking branch
-		rm -rf ##WWW_PATH##/##PROJECT##/repo/$BRANCH
+		##SUDO_PATH## -u ##GIT_USERNAME## /srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH delete
+		# ##SUDO_PATH## -u ##GIT_USERNAME## ssh -o StrictHostKeyChecking=no ##PROJECT##.##DEV_DOMAIN## "/srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH delete"
 		;;
 	*)
 		# Anything else (is there anything else?)
