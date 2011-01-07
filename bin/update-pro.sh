@@ -28,8 +28,8 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
     fi
 fi
 
-if [ -d "$WWW_PATH/$PROJECT/repo/rel/.git" ]; then
-    $SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$PRO_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/rel && git pull; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT rel"
+if [ -d "$GIT_REPOSITORIES_PATH/$PROJECT" ]; then
+    $SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$PRO_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/master; git pull; TAG=$((`git tag -l | wc -l`+1)); git tag $TAG; git push origin --tags; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT master"
 else
     $SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$PRO_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/rel; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT"
 fi
