@@ -39,11 +39,6 @@ case "$refname","$newrev_type" in
 		##SUDO_PATH## -u ##GIT_USERNAME## /srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH delete
 		# ##SUDO_PATH## -u ##GIT_USERNAME## ssh -o StrictHostKeyChecking=no ##PROJECT##.##DEV_DOMAIN## "/srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH delete"
 		;;
-	*)
-		# Anything else (is there anything else?)
-		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
-		exit 1
-		;;
 esac
 
 exit 0
