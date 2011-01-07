@@ -28,8 +28,8 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
     fi
 fi
 
-if [ -d "$WWW_PATH/$PROJECT/repo/test/.git" ]; then
-    $SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/test && git pull; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT test"
+if [ -d "$GIT_REPOSITORIES_PATH/$PROJECT" ]; then
+    $SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/test; GIT_SSL_NO_VERIFY=true git pull; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT test"
 else
     $SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/test; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT"
 fi

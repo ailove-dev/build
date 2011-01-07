@@ -23,7 +23,7 @@ if [ -z "$PROJECT" ]; then
 fi
 
 if [ -d "$WWW_PATH/$PROJECT/repo/$BRANCH/.git" ]; then
-    echo "revision=`cd $WWW_PATH/$PROJECT/repo/$BRANCH && git rev-parse heads/$BRANCH`" > $WWW_PATH/$PROJECT/conf/revision
+    echo "revision=`cd $WWW_PATH/$PROJECT/repo/$BRANCH && GIT_SSL_NO_VERIFY=true git rev-parse heads/$BRANCH`" > $WWW_PATH/$PROJECT/conf/revision
 else
     echo "revision=`LANG=ru_RU.UTF-8 svnversion $WWW_PATH/$PROJECT/repo/dev`" > $WWW_PATH/$PROJECT/conf/revision
 fi
