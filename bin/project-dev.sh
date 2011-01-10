@@ -229,7 +229,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
 	fi
 
-	if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-secondary" ]; then
+	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
 		WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
 	    else
@@ -237,7 +237,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    fi
 
 WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
-cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -h$DEV_HOSTNAME -D$REDMINE_DATABASE
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
 SET NAMES UTF8;
 CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
 EOF

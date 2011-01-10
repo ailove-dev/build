@@ -28,7 +28,7 @@ host: ##DEV_DOMAIN##
 port: 5432
 name: ##PROJECT##
 user: ##PROJECT##
-pass: ##PASSWORD##
+pass: смотрите файл "conf/database"
 </pre>
 
 h3. MySQL
@@ -43,7 +43,7 @@ host: ##DEV_DOMAIN##
 port: 3306
 name: ##PROJECT##
 user: ##PROJECT##
-pass: ##PASSWORD##
+pass: смотрите файл "conf/database"
 </pre>
 
 h2. SVN репозиторий
