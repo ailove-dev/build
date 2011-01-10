@@ -71,9 +71,9 @@ login: username@##PROJECT##
 
 h2. DEV-, REL- и PRO-сайты
 
-http://##PROJECT##.##DEV_DOMAIN## (ветка *dev* в хранилище)
-http://##PROJECT##.##REL_DOMAIN## (ветка *rel* в хранилище)
-http://##PROJECT##.##PRO_DOMAIN## (синхронизируется из ветки *rel* на pro-сервер)
+http://##PROJECT##.##REL_DOMAIN## (*master* в хранилище)
+http://dev.##PROJECT##.##DEV_DOMAIN## (ветка *dev* в хранилище)
+http://##PROJECT##.##PRO_DOMAIN## (синхронизируется из *master* на pro-сервер)
 
 h2. Crontab
 
