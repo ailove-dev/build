@@ -10,7 +10,7 @@ h3. Исходящая почта
 
 *Параметры доступа:*
 <pre>
-host: ##DEV_DOMAIN##
+host: ##PROJECT##.##DEV_DOMAIN##
 port: 143 (IMAP)
 user: dev
 pass: dev
@@ -24,7 +24,7 @@ https://##FACTORY_HOSTNAME##/phpPgAdmin/
 
 *Параметры доступа:*
 <pre>
-host: ##DEV_DOMAIN##
+host: ##PROJECT##.##DEV_DOMAIN##
 port: 5432
 name: ##PROJECT##
 user: ##PROJECT##
@@ -39,7 +39,7 @@ https://##FACTORY_HOSTNAME##/phpMyAdmin/
 
 *Параметры доступа:*
 <pre>
-host: ##DEV_DOMAIN##
+host: ##PROJECT##.##DEV_DOMAIN##
 port: 3306
 name: ##PROJECT##
 user: ##PROJECT##
@@ -61,7 +61,7 @@ login/password совпадают с учетными данными фабри�
 h2. Параметры доступа FTP
 
 <pre>
-host dev-сервера: ##DEV_DOMAIN##
+host dev-сервера: ##PROJECT##.##DEV_DOMAIN##
 host pro-сервера: ##PROJECT##.##PRO_DOMAIN##
 login: username@##PROJECT##
 </pre>
