@@ -69,9 +69,9 @@ login: username@##PROJECT##
 Вместо _username_ необходимо ввести логин для входа в фабрику.
 Пароль совпадает с паролем фабрики.
 
-h2. DEV-, REL- и PRO-сайты
+h2. Ветки
 
-http://##PROJECT##.##REL_DOMAIN## (*master* в хранилище)
+http://##PROJECT##.##DEV_DOMAIN## (*master* в хранилище)
 http://dev.##PROJECT##.##DEV_DOMAIN## (ветка *dev* в хранилище)
 http://##PROJECT##.##PRO_DOMAIN## (синхронизируется из *master* на pro-сервер)
 
