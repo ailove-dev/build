@@ -6,7 +6,7 @@
     Alias /data/ ##WWW_PATH##/##PROJECT##/data/
 
     <Location />
-        php_admin_value open_basedir "##WWW_PATH##/##PROJECT##"
+        php_admin_value open_basedir "/usr/share/pear:##WWW_PATH##/##PROJECT##"
         php_admin_value upload_tmp_dir "##WWW_PATH##/##PROJECT##/tmp"
         php_admin_value session.save_path "##WWW_PATH##/##PROJECT##/tmp"
 	php_admin_value memory_limit "256M"
@@ -31,7 +31,7 @@
     Alias /data/ ##WWW_PATH##/##PROJECT##/data/
 
     <Location />
-        php_admin_value open_basedir "##WWW_PATH##/##PROJECT##"
+        php_admin_value open_basedir "/usr/share/pear:##WWW_PATH##/##PROJECT##"
         php_admin_value upload_tmp_dir "##WWW_PATH##/##PROJECT##/tmp"
         php_admin_value session.save_path "##WWW_PATH##/##PROJECT##/tmp"
 	php_admin_value memory_limit "256M"
