@@ -18,7 +18,7 @@ server {
 	root ##WWW_PATH##/##PROJECT##;
     }
 
-    location ~* \.(jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2|doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|avi|djvu|mp3)$ {
+    location ~* \.(jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2|doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|avi|djvu|mp3|mp4|ogv)$ {
 	root ##WWW_PATH##/##PROJECT##/repo/$branch/htdocs;
     }
 
