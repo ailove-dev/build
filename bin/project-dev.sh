@@ -244,7 +244,7 @@ EOF
 	fi
 
 	# exit if we need only git repository creation
-	if [ "$ACTION" = "gitcreate-bare" ]; then
+	if [ "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate" ]; then
 	    if [ "$MYSQL_ENABLED" != "NO" ]; then
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
