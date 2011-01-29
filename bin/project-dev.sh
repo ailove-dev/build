@@ -191,17 +191,17 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    # create repository
 	    su $SU_SUFFIX $WWW_USERNAME -c "mkdir -p $GIT_REPOSITORIES_PATH/$PROJECT"
 	    cd $GIT_REPOSITORIES_PATH/$PROJECT
-	    su $SU_SUFFIX $WWW_USERNAME -c "git --bare init"
+	    su $SU_SUFFIX $WWW_USERNAME -c "GIT_SSL_NO_VERIFY=true git --bare init"
 	    # accept git push without authorization
-	    su $SU_SUFFIX $WWW_USERNAME -c "git config http.receivepack true"
+	    su $SU_SUFFIX $WWW_USERNAME -c "GIT_SSL_NO_VERIFY=true git config http.receivepack true"
 
     	    # create dev branch
-    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
-    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; mkdir htdocs; touch htdocs/empty; git add .; git commit -a -q -m \"initial\"; git push origin master"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; mkdir htdocs; touch htdocs/empty; GIT_SSL_NO_VERIFY=true git add .; GIT_SSL_NO_VERIFY=true git commit -a -q -m \"initial\"; GIT_SSL_NO_VERIFY=true git push origin master"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-master-branch"
 
-    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
-    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; git push origin master:refs/heads/dev"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-dev-branch"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; GIT_SSL_NO_VERIFY=true git push origin master:refs/heads/dev"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
 	    # make post-update hook
@@ -225,8 +225,8 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
 	if [ "$ACTION" != "gitcreate-bare" ]; then
 	    # clone branches
-    	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
-	    su $SU_SUFFIX $GIT_USERNAME -c "git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+    	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
+	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
 	fi
 
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
