@@ -253,7 +253,10 @@ INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VA
 UPDATE \`soa\` SET serial=serial+1;
 EOF
 	    fi
-	    exit 0
+
+	    if [ "$ACTION" = "gitcreate-bare" ]; then
+		exit 0
+	    fi
 	fi
     else
         # create repository
