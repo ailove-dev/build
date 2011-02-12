@@ -72,7 +72,8 @@ else
     SU_SUFFIX="--shell=/bin/sh"
 fi
 
-DEV_HOSTNAME_PCRE=`echo $DEV_HOSTNAME | sed 's:\.:\\\.:g'`
+#DEV_HOSTNAME_PCRE=`echo $DEV_HOSTNAME | sed 's:\.:\\\.:g'`
+DEV_HOSTNAME_PCRE=`echo $DEV_HOSTNAME | sed 's:\.:\\\\\\\\\\\.:g'`
 
 SED_FLAGS="	-e 's@##SUDO_PATH##@$SUDO_PATH@g' \
 		-e 's@##SVN_USERNAME##@$SVN_USERNAME@g' \
