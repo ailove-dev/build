@@ -284,16 +284,20 @@ EOF
 
     # create project's structure and give the rights
     mkdir $WWW_PATH/$PROJECT/tmp
-    mkdir $WWW_PATH/$PROJECT/logs
-    mkdir $WWW_PATH/$PROJECT/logs/cron
+    mkdir -p $WWW_PATH/$PROJECT/logs/cron
     mkdir $WWW_PATH/$PROJECT/conf
     mkdir $WWW_PATH/$PROJECT/data
     mkdir $WWW_PATH/$PROJECT/cache
+    mkdir -p $WWW_PATH/$PROJECT/cron/minutely
+    mkdir -p $WWW_PATH/$PROJECT/cron/daily
+    mkdir -p $WWW_PATH/$PROJECT/cron/hourly
+
     chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/tmp; chmod 777 $WWW_PATH/$PROJECT/tmp
     chown -R $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/logs; chmod 777 $WWW_PATH/$PROJECT/logs/cron
     chown -R $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf
     chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/data; chmod 777 $WWW_PATH/$PROJECT/data
     chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cache; chmod 777 $WWW_PATH/$PROJECT/cache
+    chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cron
 
     # create revision file
     if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
