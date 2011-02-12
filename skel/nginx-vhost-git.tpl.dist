@@ -1,7 +1,6 @@
 server {
     listen 80;
-    server_name ~^(.*)\.##PROJECT##\.##DEV_DOMAIN_PCRE##$ ##PROJECT##.##DEV_DOMAIN##;
-    set $branch $1;
+    server_name ~^(?P<branch>.*)\.##PROJECT##\.##DEV_DOMAIN_PCRE##$ ##PROJECT##.##DEV_DOMAIN##;
 
     if ($branch = "") {
 	set $branch "master";
