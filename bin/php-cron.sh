@@ -18,14 +18,15 @@ if [ "$1" != "minutely" -a "$1" != "hourly" -a "$1" != "daily" ]; then
   exit 1
 fi
 
-CRON_INTERVAL="minutely"
+CRON_INTERVAL=$1
 
 if [ "$2" = "" ]; then 
   OLDDIR=`pwd -P`
   cd $WWW_PATH
   PROJECT_LIST=`/usr/bin/find */cron/$CRON_INTERVAL -maxdepth 0 | sed 's/\(.*\)\/cron\/.*/\1/'`
   if [ "$?" != "0" ]; then
-    echo "Directory cron not found in projects"
+#    echo "Directory cron not found in projects"
+    exit 0
   fi
   cd $OLDDIR
   for PRJ in $PROJECT_LIST ; do
