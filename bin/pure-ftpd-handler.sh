@@ -6,9 +6,9 @@ LOCATION="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/.."
 # read configuration
 if [ -f "$LOCATION/etc/project-dev.conf.dist" ]; then
     . "$LOCATION/etc/project-dev.conf.dist"
-    if [ -f "$LOCATION/etc/project-dev.conf" ]; then
-	. "$LOCATION/etc/project-dev.conf"
-    fi
+	if [ -f "$LOCATION/etc/project-dev.conf" ]; then
+	    . "$LOCATION/etc/project-dev.conf"
+	fi
 else
     echo "can't load $LOCATION/etc/project-dev.conf.dist, please fetch it from repository"
     exit 0
@@ -33,20 +33,29 @@ QUERY_PASSWORD="SELECT u.hashed_password \
     AND ($ACCESS_ROLES) \
     LIMIT 1;"
 
+QUERY_SALT="SELECT salt \
+    FROM users \
+    WHERE login = SUBSTRING_INDEX('$AUTHD_ACCOUNT','$DELIMITER',1)
+    LIMIT 1;"
+
 QUERY_UID="SELECT $WWW_UID"
 QUERY_GID="SELECT $WWW_GID"
 QUERY_DIR="SELECT CONCAT('$WWW_PATH/', SUBSTRING_INDEX('$AUTHD_ACCOUNT','$DELIMITER',-1))"
 
-QUERY_AUTHD_PASSWORD="SELECT sha1('$AUTHD_PASSWORD')"
-
 RESULT_SHA1_PASSWORD=`$MYSQL -e "$QUERY_PASSWORD"`
+RESULT_SALT=`$MYSQL -e "$QUERY_SALT"`
+
+QUERY_AUTHD_PASSWORD="SELECT sha1('$AUTHD_PASSWORD')"
+AUTHD_SHA1_PASSWORD=`$MYSQL -e "$QUERY_AUTHD_PASSWORD"`
+
+AUTHD_SALTED_PASSWORD=$RESULT_SALT$AUTHD_SHA1_PASSWORD
+AUTHD_SALTED_PASSWORD=`$MYSQL -e "SELECT sha1('$AUTHD_SALTED_PASSWORD')"`
+
 RESULT_UID=`$MYSQL -e "$QUERY_UID"`
 RESULT_GID=`$MYSQL -e "$QUERY_GID"`
 RESULT_DIR=`$MYSQL -e "$QUERY_DIR"`
 
-AUTHD_SHA1_PASSWORD=`$MYSQL -e "$QUERY_AUTHD_PASSWORD"`
-
-if test "$AUTHD_SHA1_PASSWORD" = "$RESULT_SHA1_PASSWORD"; then
+if test "$AUTHD_SALTED_PASSWORD" = "$RESULT_SHA1_PASSWORD"; then
     echo "auth_ok:1"
     echo "uid:$RESULT_UID"
     echo "gid:$RESULT_GID"
@@ -56,5 +65,3 @@ else
 fi
 
 echo "end"
-
-exit 0
