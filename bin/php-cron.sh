@@ -3,13 +3,13 @@
 LOCATION="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/.."
 
 # read configuration
-if [ -f "$LOCATION/etc/admin.conf.dist" ]; then
-    . "$LOCATION/etc/admin.conf.dist"
-    if [ -f "$LOCATION/etc/admin.conf" ]; then
-        . "$LOCATION/etc/admin.conf"
+if [ -f "$LOCATION/etc/project-dev.conf.dist" ]; then
+    . "$LOCATION/etc/project-dev.conf.dist"
+    if [ -f "$LOCATION/etc/project-dev.conf" ]; then
+        . "$LOCATION/etc/project-dev.conf"
     fi
 else
-    echo "can't load $LOCATION/etc/admin.conf.dist, please fetch it from repository"
+    echo "can't load $LOCATION/etc/project-dev.conf.dist, please fetch it from repository"
     exit 1
 fi
                                         
