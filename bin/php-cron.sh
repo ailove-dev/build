@@ -20,6 +20,11 @@ fi
 
 CRON_INTERVAL=$1
 
+COUNT=`ls -laF $WWW_PATH | wc -l`
+if [ "$COUNT" -lt "4" ]; then
+    exit
+fi
+
 if [ "$2" = "" ]; then 
   OLDDIR=`pwd -P`
   cd $WWW_PATH
