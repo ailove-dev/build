@@ -28,16 +28,18 @@ fi
 if [ "$2" = "" ]; then 
   OLDDIR=`pwd -P`
   cd $WWW_PATH
-  PROJECT_LIST=`/usr/bin/find */cron/$CRON_INTERVAL -maxdepth 0 | sed 's/\(.*\)\/cron\/.*/\1/'`
+  PROJECT_LIST=`/usr/bin/find * -maxdepth 0 -type d | sed 's/\(.*\)\/cron\/.*/\1/'`
   if [ "$?" != "0" ]; then
 #    echo "Directory cron not found in projects"
     exit 0
   fi
   cd $OLDDIR
   for PRJ in $PROJECT_LIST ; do
-    TTTT=`/usr/bin/find $WWW_PATH/$PRJ/cron/$CRON_INTERVAL/*.php 2>&1 >/dev/null`
-    if [ "$?" = "0" ]; then
-	$0 $CRON_INTERVAL $PRJ &
+    if [ -d "$WWW_PATH/$PRJ/cron/$CRON_INTERVAL" ]; then
+	TTTT=`/usr/bin/find $WWW_PATH/$PRJ/cron/$CRON_INTERVAL/*.php 2>&1 >/dev/null`
+	if [ "$?" = "0" ]; then
+	    $0 $CRON_INTERVAL $PRJ &
+	fi
     fi
   done
 fi
