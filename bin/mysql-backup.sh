@@ -2,18 +2,6 @@
 
 # Southbridge MySQL backup script by Igor Olemskoi <igor@southbridge.ru> (based on AutoMySQLBackup)
 
-LOCATION="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/.."
-
-if [ -f "$LOCATION/etc/mysql-backup.conf.dist" ]; then
-    . "$LOCATION/etc/mysql-backup.conf.dist"
-    if [ -f "$LOCATION/etc/mysql-backup.conf" ]; then
-	. "$LOCATION/etc/mysql-backup.conf"
-    fi
-else
-    echo "mysql-backup.conf.dist not found"
-    exit 0
-fi
-
 #=====================================================================
 # Options documantation
 #=====================================================================
@@ -268,6 +256,18 @@ LOGERR=$BACKUPDIR/ERRORS_$DBHOST-`date +%N`.log		# Logfile Name
 BACKUPFILES=""
 OPT="--quote-names --opt --routines --single-transaction"	# OPT string for use with mysqldump ( see man mysqldump )
 DBEXCLUDE+=" information_schema"
+
+LOCATION="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/.."
+
+if [ -f "$LOCATION/etc/mysql-backup.conf.dist" ]; then
+    . "$LOCATION/etc/mysql-backup.conf.dist"
+    if [ -f "$LOCATION/etc/mysql-backup.conf" ]; then
+	. "$LOCATION/etc/mysql-backup.conf"
+    fi
+else
+    echo "mysql-backup.conf.dist not found"
+    exit 0
+fi
 
 # Add --compress mysqldump option to $OPT
 if [ "$COMMCOMP" = "yes" ];
