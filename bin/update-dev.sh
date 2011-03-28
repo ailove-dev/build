@@ -54,7 +54,8 @@ if [ ! -d $WWW_PATH/$PROJECT/repo/$BRANCH ]; then
 fi
 
 cd $WWW_PATH/$PROJECT/repo/$BRANCH
-GIT_SSL_NO_VERIFY=true git reset --hard HEAD
+GIT_SSL_NO_VERIFY=true git fetch origin
+GIT_SSL_NO_VERIFY=true git reset --hard origin
 GIT_SSL_NO_VERIFY=true git pull
 
 if [ "$BRANCH" = "master" ]; then
