@@ -214,6 +214,15 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    # convert hook template
 	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 
+	    # make post-receive hook
+	    if [ -f "$SKEL_PATH/post-receive.tpl" ]; then
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-receive.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive"
+	    else
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-receive.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive"
+	    fi
+	    # convert hook template
+	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive
+
 	    # make update hook
 	    if [ -f "$SKEL_PATH/update.tpl" ]; then
 		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
