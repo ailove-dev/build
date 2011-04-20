@@ -1,10 +1,3 @@
 #!/bin/sh
 
-PATH=/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:$PATH
-
-REF=`echo $1 | awk --field-separator="/" '{print $2}'`
-if [ $REF = "branches" -o $REF = "heads" ]; then
-    BRANCH=`echo $1 | awk --field-separator="/" '{print $3}'`
-    ##SUDO_PATH## -u ##GIT_USERNAME## /srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH
-    # ##SUDO_PATH## -u ##GIT_USERNAME## ssh -o StrictHostKeyChecking=no ##PROJECT##.##DEV_DOMAIN## "/srv/admin/bin/update-dev.sh ##PROJECT## $BRANCH"
-fi
+# sample post-receive script
