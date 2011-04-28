@@ -46,7 +46,7 @@ COMP=gzip
 LATEST=no
 
 # Optional pg_dump settings
-OPT="--encoding=utf-8"
+OPT="--encoding=utf-8 --clean --no-owner"
 
 # Port
 if [ -f "/etc/init.d/pgbouncer" ]; then
