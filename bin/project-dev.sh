@@ -278,6 +278,9 @@ EOF
     fi
 
     if [ "$ACTION" != "gitcreate-secondary" ]; then
+
+echo "WIKI !!!!!!!!!!!!!!!!!!!!!!!!"
+
 	if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
 	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
 	else
