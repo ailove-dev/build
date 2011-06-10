@@ -251,6 +251,18 @@ EOF
 	    fi
 
 	    if [ "$ACTION" = "gitcreate-bare" ]; then
+		# wiki creation
+		if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
+		    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
+		else
+		    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
+		fi
+
+WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
+SET NAMES UTF8;
+CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
+EOF
 		exit 0
 	    fi
 	fi
@@ -275,23 +287,6 @@ EOF
 	fi
 	# convert template
 	eval sed $SED_FLAGS $SED_SUFFIX $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit
-    fi
-
-    if [ "$ACTION" != "gitcreate-secondary" ]; then
-
-echo "WIKI !!!!!!!!!!!!!!!!!!!!!!!!"
-
-	if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
-	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
-	else
-	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
-	fi
-
-WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
-cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
-SET NAMES UTF8;
-CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
-EOF
     fi
 
     # create project's structure and give the rights
