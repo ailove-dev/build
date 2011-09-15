@@ -187,6 +187,19 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	mkdir -p $WWW_PATH/$PROJECT && cd $WWW_PATH/$PROJECT
 	chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
 
+	# wiki creation
+	if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
+	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
+	else
+	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
+	fi
+
+WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
+SET NAMES UTF8;
+CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
+EOF
+
 	# don't create git repository on secondary
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
 	    # create repository
@@ -239,8 +252,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
 	fi
 
-	# exit if we need only git repository creation
-	if [ "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate" -o "$ACTION" = "create" ]; then
+	if [ "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate" ]; then
 	    if [ "$MYSQL_ENABLED" != "NO" ]; then
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
@@ -250,19 +262,8 @@ UPDATE \`soa\` SET serial=serial+1;
 EOF
 	    fi
 
-	    # wiki creation
-	    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
-		WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
-	    else
-		WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
-	    fi
 
-WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
-cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
-SET NAMES UTF8;
-CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
-EOF
-
+	    # exit if we need only git repository creation
 	    if [ "$ACTION" = "gitcreate-bare" ]; then
 		exit 0
 	    fi
