@@ -180,6 +180,19 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
     echo "creating project '$PROJECT'"
 
+    # wiki creation
+    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
+	WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
+    else
+	WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
+    fi
+
+WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
+cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
+SET NAMES UTF8;
+CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
+EOF
+
     ########################################################################################################################
 
     if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
@@ -187,18 +200,6 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	mkdir -p $WWW_PATH/$PROJECT && cd $WWW_PATH/$PROJECT
 	chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
 
-	# wiki creation
-	if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
-	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
-	else
-	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
-	fi
-
-WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
-cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
-SET NAMES UTF8;
-CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
-EOF
 
 	# don't create git repository on secondary
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
