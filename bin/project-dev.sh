@@ -180,7 +180,7 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 
     echo "creating project '$PROJECT'"
 
-    if [ -z $NOTIFY ]; then
+    if [ ! -z $NOTIFY ]; then
 	echo "new project notification" | mail -s "factory.ailove.ru: project '$PROJECT' created" $NOTIFY
     fi
 
