@@ -1,0 +1,16 @@
+# Host name (or IP address) of MySQL server e.g localhost
+DBHOST=localhost
+# Backup directory location e.g /backups
+BACKUPDIR="/var/backups/mongodb"
+
+# Mail setup
+# What would you like to be mailed to you?
+# - log   : send only log file
+# - files : send log file and sql files as attachments (see docs)
+# - stdout : will simply output the log to the screen if run manually.
+# - quiet : Only send logs if an error occurs to the MAILADDR.
+MAILCONTENT="quiet"
+
+# Email Address to send mail to? (user@domain.com)
+MAILADDR="root"
+

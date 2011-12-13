@@ -281,7 +281,27 @@ if [ "$MAX_ALLOWED_PACKET" ];
 		OPT="$OPT --max_allowed_packet=$MAX_ALLOWED_PACKET"
 	fi
 
+if [ ! "$BACKUP_DAYS" ];
+	then
+		BACKUP_DAYS=7
+	fi
+
+if [ ! "$DO_SQL_DUMP" ];
+	then
+		DO_SQL_DUMP="yes"
+	fi
+
+if [ ! "$DO_HOT_BACKUP" ];
+	then
+		DO_HOT_BACKUP="no"
+	fi
+
 # Create required directories
+if [ ! -e "/var/lib/mysql.backup" ]             # Check Backup Directory exists.
+        then
+            mkdir -p "/var/lib/mysql.backup"
+fi
+
 if [ ! -e "$BACKUPDIR" ]		# Check Backup Directory exists.
 	then
 	mkdir -p "$BACKUPDIR"
@@ -311,6 +331,7 @@ then
 eval rm -fv "$BACKUPDIR/latest/*"
 fi
 
+
 # IO redirection for logging.
 touch $LOGFILE
 exec 6>&1           # Link file descriptor #6 with stdout.
@@ -321,35 +342,71 @@ exec 7>&2           # Link file descriptor #7 with stderr.
                     # Saves stderr.
 exec 2> $LOGERR     # stderr replaced with file $LOGERR.
 
-
 # Functions
+
 
 # Database dump function
 dbdump () {
-mysqldump --user=$USERNAME --password=$PASSWORD --host=$DBHOST $OPT $1 > $2
+    mysqldump --user=$USERNAME --password=$PASSWORD --host=$DBHOST $OPT $1 > $2
+    return 0
+}
+
+dbdump_h () {
+    echo First rsync started at `date`
+    rsync -avH --delete --numeric-ids /var/lib/mysql/ /var/lib/mysql.backup
+    echo First rsync finished at `date`
+    echo DB locked, second rsync started at `date`
+    echo "FLUSH TABLES WITH READ LOCK" | mysql --user=$USERNAME --password=$PASSWORD --host=$DBHOST
+    rsync -avH --delete --numeric-ids /var/lib/mysql/ /var/lib/mysql.backup
+    echo "UNLOCK TABLES" | mysql --user=$USERNAME --password=$PASSWORD --host=$DBHOST
+    echo DB unlocked, second rsync finished at `date`
 return 0
 }
 
 # Compression function plus latest copy
 SUFFIX=""
 compression () {
-if [ "$COMP" = "gzip" ]; then
+    if [ "$COMP" = "gzip" ]; then
 	gzip -f "$1"
 	echo
 	echo Backup Information for "$1"
 	gzip -l "$1.gz"
 	SUFFIX=".gz"
-elif [ "$COMP" = "bzip2" ]; then
+    elif [ "$COMP" = "bzip2" ]; then
 	echo Compression information for "$1.bz2"
 	bzip2 -f -v $1 2>&1
 	SUFFIX=".bz2"
-else
+    else
 	echo "No compression option set, check advanced settings"
-fi
-if [ "$LATEST" = "yes" ]; then
+    fi
+    if [ "$LATEST" = "yes" ]; then
 	cp $1$SUFFIX "$BACKUPDIR/latest/"
-fi	
-return 0
+    fi	
+    return 0
+}
+
+# Compression function plus latest copy
+SUFFIX=""
+compression_h () {
+    if [ "$COMP" = "gzip" ]; then
+        TPWD=`pwd`
+        cd /var/lib/mysql.backup
+        tar -czvf "$1.tgz" . 2>&1
+        cd $TPWD
+        SUFFIX=".tgz"
+    elif [ "$COMP" = "bzip2" ]; then
+        TPWD=`pwd`
+        cd /var/lib/mysql.backup
+        tar -cjvf "$1.tbz2" . 2>&1
+        cd $TPWD
+        SUFFIX=".tbz2"
+    else
+        echo "No compression option set, check advanced settings"
+    fi
+    if [ "$LATEST" = "yes" ]; then
+        cp $1$SUFFIX_H "$BACKUPDIR/latest/"
+    fi
+    return 0
 }
 
 ## rotates monthly backups, set 'keep' to the last n backups to keep
@@ -435,6 +492,8 @@ echo
 echo Backup of Database Server - $HOST
 echo ======================================================================
 
+if [ "$DO_SQL_DUMP" = "yes" ]; then
+
 # Test is seperate DB backups are required
 if [ "$SEPDIR" = "yes" ]; then
 echo Backup Start Time `date`
@@ -469,14 +528,14 @@ echo ======================================================================
 		then
 		mkdir -p "$BACKUPDIR/daily/$DB"
 	fi
-	
-	if [ ! -e "$BACKUPDIR/weekly/$DB" ]		# Check Weekly DB Directory exists.
+	if [ $BACKUP_DAYS -le 7 ]; then
+	    if [ ! -e "$BACKUPDIR/weekly/$DB" ]		# Check Weekly DB Directory exists.
 		then
 		mkdir -p "$BACKUPDIR/weekly/$DB"
+	    fi
+	    # Weekly Backup
 	fi
-	
-	# Weekly Backup
-	if [ $DNOW = $DOWEEKLY ]; then
+    	if [ $DNOW = $DOWEEKLY -a $BACKUP_DAYS -le 7 ]; then
 		echo Weekly Backup of Database \( $DB \)
 		echo Rotating 5 weeks Backups...
 			if [ "$W" -le 05 ];then
@@ -492,12 +551,11 @@ echo ======================================================================
 			compression "$BACKUPDIR/weekly/$DB/${DB}_week.$W.$DATE.sql"
 			BACKUPFILES="$BACKUPFILES $BACKUPDIR/weekly/$DB/${DB}_week.$W.$DATE.sql$SUFFIX"
 		echo ----------------------------------------------------------------------
-	
 	# Daily Backup
 	else
 		echo Daily Backup of Database \( $DB \)
 		echo Rotating last weeks Backup...
-		eval rm -fv "$BACKUPDIR/daily/$DB/*.$DOW.sql.*" 
+		eval find "$BACKUPDIR/daily/$DB" -name "*.sql.*" -mtime +$BACKUP_DAYS -delete
 		echo
 			dbdump "$DB" "$BACKUPDIR/daily/$DB/${DB}_$DATE.$DOW.sql"
 			compression "$BACKUPDIR/daily/$DB/${DB}_$DATE.$DOW.sql"
@@ -531,7 +589,7 @@ echo ======================================================================
 	echo
 
 	# Weekly Backup
-	if [ $DNOW = $DOWEEKLY ]; then
+    	if [ $DNOW = $DOWEEKLY -a $BACKUP_DAYS -le 7 ]; then
 		echo Weekly Backup of Databases \( $DBNAMES \)
 		echo
 		echo Rotating 5 weeks Backups...
@@ -554,7 +612,7 @@ echo ======================================================================
 		echo Daily Backup of Databases \( $DBNAMES \)
 		echo
 		echo Rotating last weeks Backup...
-		eval rm -fv "$BACKUPDIR/daily/*.$DOW.sql.*" 
+		eval find "$BACKUPDIR/daily/$DB" -name "*.sql.*" -mtime +$BACKUP_DAYS -delete
 		echo
 			dbdump "$DBNAMES" "$BACKUPDIR/daily/$DATE.$DOW.sql"
 			compression "$BACKUPDIR/daily/$DATE.$DOW.sql"
@@ -564,6 +622,55 @@ echo ======================================================================
 echo Backup End Time `date`
 echo ======================================================================
 fi
+fi
+
+#### HOT BACKUP
+if [ "$DO_HOT_BACKUP" = "yes" ]; then
+
+    echo HOT Backup Start `date`
+    echo ======================================================================
+    # Monthly HOT Full Backup of all Databases
+    if [ $DOM = "01" ]; then
+        echo Monthly full Backup of \( $MDBNAMES \)...
+        dbdump_h "$MDBNAMES" "$BACKUPDIR/monthly/$DATE.$M.all-databases.sql"
+###        compression_h "$BACKUPDIR/monthly/$DATE.$M.all-databases.sql"
+        BACKUPFILES="$BACKUPFILES $BACKUPDIR/monthly/$DATE.$M.all-databases.sql$SUFFIX"
+        echo ----------------------------------------------------------------------
+    fi
+# Weekly Backup
+    if [ $DNOW = $DOWEEKLY -a $BACKUP_DAYS -le 7 ]; then
+        echo Weekly Backup of Databases \( $DBNAMES \)
+        echo
+        echo Rotating 5 weeks Backups...
+	if [ "$W" -le 05 ];then
+                REMW=`expr 48 + $W`
+        elif [ "$W" -lt 15 ];then
+                REMW=0`expr $W - 5`
+        else
+	        REMW=`expr $W - 5`
+        fi
+        eval rm -fv "$BACKUPDIR/weekly/week.$REMW.*"
+        echo
+        dbdump_h "$DBNAMES" "$BACKUPDIR/weekly/week.$W.$DATE.sql"
+###        compression_h "$BACKUPDIR/weekly/week.$W.$DATE.sql"
+        BACKUPFILES="$BACKUPFILES $BACKUPDIR/weekly/week.$W.$DATE.sql$SUFFIX"
+        echo ----------------------------------------------------------------------
+# Daily Backup
+    else
+        echo Daily Backup of Databases \( $DBNAMES \)
+        echo
+        echo Rotating last weeks Backup...
+        eval find "$BACKUPDIR/daily/$DB" -name "*.sql.*" -mtime +$BACKUP_DAYS -delete
+        echo
+        dbdump_h "$DBNAMES" "$BACKUPDIR/daily/$DATE.$DOW.sql"
+###        compression_h "$BACKUPDIR/daily/$DATE.$DOW.sql"
+        BACKUPFILES="$BACKUPFILES $BACKUPDIR/daily/$DATE.$DOW.sql$SUFFIX"
+        echo ----------------------------------------------------------------------
+    fi
+    echo Backup End Time `date`
+    echo ======================================================================
+fi
+
 echo Total disk space used for backup storage..
 echo Size - Location
 echo `du -hs "$BACKUPDIR"`

@@ -39,6 +39,9 @@ DBEXCLUDE=""
 # Which day do you want weekly backups? (1 to 7 where 1 is Monday)
 DOWEEKLY=6
 
+# How many days keep backup
+BACKUP_DAYS=7
+
 # Choose Compression type. (gzip or bzip2)
 COMP=gzip
 
@@ -54,3 +57,8 @@ if [ -f "/etc/init.d/pgbouncer" ]; then
 else
     PORT="5432"
 fi
+
+# (если не описано, по-умолчанию так и делать)
+DO_SQL_DUMP=yes
+# (если не описано, по-умолчанию не делать)
+DO_HOT_BACKUP=no
