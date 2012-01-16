@@ -143,9 +143,11 @@ fi
 
 # if action "[z]dump"
 if [ "$ACTION" = "dump" -o "$ACTION" = "zdump" ]; then
-    if [ ! -d "$SVN_REPOSITORIES_PATH/$PROJECT" -a ! -d "$GIT_REPOSITORIES_PATH/$PROJECT" ]; then
-	echo "project $PROJECT doesn't exists"
-	exit 1
+    if [ ! -d "$SVN_REPOSITORIES_PATH/$PROJECT" ]; then
+	if [ ! -d "$GIT_REPOSITORIES_PATH/$PROJECT" ]; then
+	    echo "project $PROJECT doesn't exists"
+	    exit 1
+	fi
     fi
 
     if [ "$ACTION" = "zdump" ]; then
