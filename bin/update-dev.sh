@@ -23,6 +23,8 @@ if [ -z "$PROJECT" ]; then
     exit 0
 fi
 
+rm -rf $WWW_PATH/$PROJECT/cache/*
+
 if [ ! -d $WWW_PATH/$PROJECT/repo/master ]; then
     GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master
 fi
