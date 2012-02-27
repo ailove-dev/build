@@ -31,10 +31,11 @@ for($i=0;$i<=$iter;$i++) {
 #	    print $projects->{$key}->{'identifier'};
            $ident_project=$projects->{$key}{'identifier'};
            $cron_enable=$projects->{$key}{'custom_fields'}{'custom_field'}{'Enable cron task'}{'value'};
+           $cron_enable=$cron_enable+$projects->{$key}{'custom_fields'}{'custom_field'}{'Always enabled cron task'}{'value'};
 #	   print " - $cron_enable\n";
 	   my $fn_l="/etc/cron.d/".$ident_project;
 	   my $fn_c="/srv/www/".$ident_project."/conf/crontab";
-	   if ($cron_enable == 1) {
+	   if ($cron_enable > 0) {
 	     if (not (-l $fn_l)) {
 	     ## create symlink to cron
 #	     print "$fn_c\n";
