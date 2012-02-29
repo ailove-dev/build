@@ -137,8 +137,8 @@ for($i=0;$i<=$iter;$i++) {
 ##	     print "$cc_email \n";
 	    $report_str = Encode::encode("koi8-r",$report_str);
 	    $project_name = Encode::encode("koi8-r",$project_name);
-	     print "echo '$report_str' | mail -s 'Cron task for $project_name' -c '$cc_email' bond\@techno-r.ru \n";
-#	     `echo '$report_str' | mail -s 'Cron task for $project_name' bond\@techno-r.ru`;
+#	     print "echo '$report_str' | mail -s 'Cron task for $project_name' -c '$cc_email' bond\@techno-r.ru \n";
+	     `echo '$report_str' | mail -s 'Cron task for $project_name' -c '$cc_email' bond\@techno-r.ru`;
 ####
 	   };
    }
