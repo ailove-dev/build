@@ -14,6 +14,7 @@ my $data_time;
 my $projects;
 my $ioff;
 my $cron_enable;
+my $always_cron_enable;
 my $ident_project;
 my $data_time;
 
@@ -31,7 +32,10 @@ for($i=0;$i<=$iter;$i++) {
 #	    print $projects->{$key}->{'identifier'};
            $ident_project=$projects->{$key}{'identifier'};
            $cron_enable=$projects->{$key}{'custom_fields'}{'custom_field'}{'Enable cron task'}{'value'};
-           $cron_enable=$cron_enable+$projects->{$key}{'custom_fields'}{'custom_field'}{'Always enabled cron task'}{'value'};
+           if ($cron_enable!=0) {$cron_enable=1;};
+           $always_cron_enable=$projects->{$key}{'custom_fields'}{'custom_field'}{'Always enabled cron task'}{'value'};
+           if ($always_cron_enable!=1) {$always_cron_enable=0;};
+           $cron_enable+=$always_cron_enable;
 #	   print " - $cron_enable\n";
 	   my $fn_l="/etc/cron.d/".$ident_project;
 	   my $fn_c="/srv/www/".$ident_project."/conf/crontab";
@@ -44,6 +48,7 @@ for($i=0;$i<=$iter;$i++) {
 	       };
 	     };
 	   }else{
+##	     print "$fn_c $fn_l\n";
 	     if (-l $fn_l) {
 	        `/bin/rm -f $fn_l`;
 	     };
