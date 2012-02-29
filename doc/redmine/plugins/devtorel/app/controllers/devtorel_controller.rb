@@ -5,7 +5,7 @@ class DevtorelController < ApplicationController
       #respond_to do |format|
         #if User.current.allowed_to?(:'view_devtorel_link',Project.find())
 		@project=Project.find(params[:id])
-        if request.xhr? && User.current.allowed_to?(:'view_devtorel_link',@project)
+        if User.current.allowed_to?(:'view_devtorel_link',@project)
 		  @result=`/srv/admin/bin/sync-devtorel.sh #{@project.identifier.to_s}`
 		else
 		  render :nothing => true
