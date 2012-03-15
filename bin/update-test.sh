@@ -29,7 +29,7 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
 fi
 
 if [ -d "$GIT_REPOSITORIES_PATH/$PROJECT" ]; then
-    $SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/test; GIT_SSL_NO_VERIFY=true git fetch origin; GIT_SSL_NO_VERIFY=true git reset --hard origin; GIT_SSL_NO_VERIFY=true git checkout test; GIT_SSL_NO_VERIFY=true git pull; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT test; $SUDO_PATH -u $WWW_USERNAME /srv/admin/bin/update-cache.sh $PROJECT"
+    $SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "cd $WWW_PATH/$PROJECT/repo/test; GIT_SSL_NO_VERIFY=true git fetch origin; GIT_SSL_NO_VERIFY=true git reset --hard origin/test; GIT_SSL_NO_VERIFY=true git pull; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT test; $SUDO_PATH -u $WWW_USERNAME /srv/admin/bin/update-cache.sh $PROJECT"
 else
     $SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $PROJECT.$TEST_HOSTNAME "LANG=ru_RU.UTF-8 svn --non-interactive update $WWW_PATH/$PROJECT/repo/test; /bin/sh /srv/admin/bin/update-revision.sh $PROJECT"
 fi
