@@ -186,18 +186,22 @@ if [ "$ACTION" = "create" -o "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-b
 	echo "new project notification: https://$FACTORY_HOSTNAME/projects/$PROJECT" | mail -s "factory.ailove.ru: project '$PROJECT' created" $NOTIFY
     fi
 
+
     # wiki creation
-    if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
-	WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
-    else
-	WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
-    fi
+    if [ -z $NO_WIKI ]; then
+	if [ -f "$SKEL_PATH/wiki-start.tpl" ]; then
+	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl"
+	else
+	    WIKI_START_PATH="$SKEL_PATH/wiki-start.tpl.dist"
+	fi
 
 WIKI_START=`eval sed $SED_FLAGS $WIKI_START_PATH`
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -D$REDMINE_DATABASE
 SET NAMES UTF8;
 CALL create_wiki('$PROJECT', $WIKI_AUTHOR_ID, '$WIKI_START');
 EOF
+
+    fi
 
     ########################################################################################################################
 
@@ -225,32 +229,35 @@ EOF
     	    su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-dev-branch; GIT_SSL_NO_VERIFY=true git push origin master:refs/heads/dev"
     	    su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-dev-branch"
 
-	    # make post-update hook
-	    if [ -f "$SKEL_PATH/post-update.tpl" ]; then
-		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
-	    else
-		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
-	    fi
-	    # convert hook template
-	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 
-	    # make post-receive hook
-	    if [ -f "$SKEL_PATH/post-receive.tpl" ]; then
-		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-receive.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive"
-	    else
-		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-receive.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive"
-	    fi
-	    # convert hook template
-	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive
+	    if [ -z $SCM_ONLY ]; then
+		# make post-update hook
+		if [ -f "$SKEL_PATH/post-update.tpl" ]; then
+		    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+		else
+		    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update"
+		fi
+		# convert hook template
+		eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-update
 
-	    # make update hook
-	    if [ -f "$SKEL_PATH/update.tpl" ]; then
-		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
-	    else
-		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
+		# make post-receive hook
+		if [ -f "$SKEL_PATH/post-receive.tpl" ]; then
+		    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-receive.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive"
+		else
+		    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-receive.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive"
+		fi
+		# convert hook template
+		eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/post-receive
+
+		# make update hook
+		if [ -f "$SKEL_PATH/update.tpl" ]; then
+		    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
+		else
+		    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/update.tpl.dist $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update"
+		fi
+		# convert hook template
+		eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update
 	    fi
-	    # convert hook template
-	    eval sed $SED_FLAGS $SED_SUFFIX $GIT_REPOSITORIES_PATH/$PROJECT/hooks/update
 	fi
 
 	if [ "$ACTION" != "gitcreate-bare" ]; then
@@ -260,15 +267,16 @@ EOF
 	fi
 
 	if [ "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate" ]; then
-	    if [ "$MYSQL_ENABLED" != "NO" ]; then
+	    if [ -z $SCM_ONLY ]; then
+		if [ "$MYSQL_ENABLED" != "NO" ]; then
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
 (1, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME'),
 (1, '*.$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME');
 UPDATE \`soa\` SET serial=serial+1;
 EOF
+		fi
 	    fi
-
 
 	    # exit if we need only git repository creation
 	    if [ "$ACTION" = "gitcreate-bare" ]; then
@@ -278,139 +286,143 @@ EOF
     else
         # create repository
 	su $SU_SUFFIX $WWW_USERNAME -c "svnadmin create $SVN_REPOSITORIES_PATH/$PROJECT"
-        # make first svn checkout
-        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet checkout $SVN_URL/$PROJECT $WWW_PATH/$PROJECT/repo"
-        # create svn directories
-        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev"
-        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev/htdocs"
-        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel"
-        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel/htdocs"
-        # make initial commit
-        su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet --message \"Initial commit\" commit $WWW_PATH/$PROJECT/repo"
 
-	# make post-commit hook
-	if [ -f "$SKEL_PATH/post-commit.tpl" ]; then
-	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
-	else
-	    su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl.dist $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
-	fi
-	# convert template
-	eval sed $SED_FLAGS $SED_SUFFIX $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit
-    fi
+	if [ -z $SCM_ONLY ]; then
+	    # make first svn checkout
+	    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet checkout $SVN_URL/$PROJECT $WWW_PATH/$PROJECT/repo"
+    	    # create svn directories
+    	    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev"
+    	    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/dev/htdocs"
+    	    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel"
+    	    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet mkdir $WWW_PATH/$PROJECT/repo/rel/htdocs"
+    	    # make initial commit
+    	    su $SU_SUFFIX $SVN_USERNAME -c "svn --non-interactive --quiet --message \"Initial commit\" commit $WWW_PATH/$PROJECT/repo"
 
-    # create project's structure and give the rights
-    mkdir $WWW_PATH/$PROJECT/tmp
-    mkdir -p $WWW_PATH/$PROJECT/logs/cron
-    mkdir $WWW_PATH/$PROJECT/conf
-    mkdir $WWW_PATH/$PROJECT/data
-    mkdir $WWW_PATH/$PROJECT/cache
-    mkdir -p $WWW_PATH/$PROJECT/cron/minutely
-    mkdir -p $WWW_PATH/$PROJECT/cron/daily
-    mkdir -p $WWW_PATH/$PROJECT/cron/hourly
-
-    chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/tmp; chmod 777 $WWW_PATH/$PROJECT/tmp
-    chown -R $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/logs; chmod 777 $WWW_PATH/$PROJECT/logs/cron
-    chown -R $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf
-    chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/data; chmod 777 $WWW_PATH/$PROJECT/data
-    chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cache; chmod 777 $WWW_PATH/$PROJECT/cache
-    chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cron
-
-    # create revision file
-    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
-	touch $WWW_PATH/$PROJECT/conf/revision
-	chown $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT/conf/revision
-	chmod 644 $WWW_PATH/$PROJECT/conf/revision
-	/srv/admin/bin/update-revision.sh $PROJECT master
-    else
-	touch $WWW_PATH/$PROJECT/conf/revision
-	chown $SVN_USERNAME:$SVN_USERNAME $WWW_PATH/$PROJECT/conf/revision
-	chmod 644 $WWW_PATH/$PROJECT/conf/revision
-	/srv/admin/bin/update-revision.sh $PROJECT
-    fi
-
-    # generate crontab
-    if [ -d "$CROND_PATH" ]; then
-	touch $WWW_PATH/$PROJECT/conf/crontab
-	chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/crontab; chmod 644 $WWW_PATH/$PROJECT/conf/crontab
-	ln -s $WWW_PATH/$PROJECT/conf/crontab $CROND_PATH/$PROJECT
-    fi
-
-    # generate conf/database and chown it
-    if [ -f "$SKEL_PATH/database.tpl" ]; then
-	cp $SKEL_PATH/database.tpl $WWW_PATH/$PROJECT/conf/database
-    else
-	cp $SKEL_PATH/database.tpl.dist $WWW_PATH/$PROJECT/conf/database
-    fi
-
-    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/database
-    chown $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/conf/database
-
-    if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
-	# copy and convert git virtualhost template
-	if [ -f "$SKEL_PATH/apache-vhost-git.tpl" ]; then
-	    cp $SKEL_PATH/apache-vhost-git.tpl $WWW_PATH/$PROJECT/conf/apache.conf
-	else
-	    cp $SKEL_PATH/apache-vhost-git.tpl.dist $WWW_PATH/$PROJECT/conf/apache.conf
-	fi
-	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache.conf
-
-	chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache.conf
-	ln -s $WWW_PATH/$PROJECT/conf/apache.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-
-	if [ "$NGINX_ENABLED" != "NO" ]; then
-	    if [ -f "$SKEL_PATH/nginx-vhost-git.tpl" ]; then
-		cp $SKEL_PATH/nginx-vhost-git.tpl $WWW_PATH/$PROJECT/conf/nginx.conf
+	    # make post-commit hook
+	    if [ -f "$SKEL_PATH/post-commit.tpl" ]; then
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
 	    else
+		su $SU_SUFFIX $WWW_USERNAME -c "cp $SKEL_PATH/post-commit.tpl.dist $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit"
+	    fi
+	    # convert template
+	    eval sed $SED_FLAGS $SED_SUFFIX $SVN_REPOSITORIES_PATH/$PROJECT/hooks/post-commit
+	fi
+    fi
+
+    if [ -z $SCM_ONLY ]; then
+	# create project's structure and give the rights
+	mkdir $WWW_PATH/$PROJECT/tmp
+	mkdir -p $WWW_PATH/$PROJECT/logs/cron
+	mkdir $WWW_PATH/$PROJECT/conf
+	mkdir $WWW_PATH/$PROJECT/data
+	mkdir $WWW_PATH/$PROJECT/cache
+	mkdir -p $WWW_PATH/$PROJECT/cron/minutely
+	mkdir -p $WWW_PATH/$PROJECT/cron/daily
+	mkdir -p $WWW_PATH/$PROJECT/cron/hourly
+
+	chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/tmp; chmod 777 $WWW_PATH/$PROJECT/tmp
+	chown -R $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/logs; chmod 777 $WWW_PATH/$PROJECT/logs/cron
+	chown -R $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf
+	chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/data; chmod 777 $WWW_PATH/$PROJECT/data
+	chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cache; chmod 777 $WWW_PATH/$PROJECT/cache
+	chown -R $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/cron
+
+	# create revision file
+	if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
+	    touch $WWW_PATH/$PROJECT/conf/revision
+	    chown $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT/conf/revision
+	    chmod 644 $WWW_PATH/$PROJECT/conf/revision
+	    /srv/admin/bin/update-revision.sh $PROJECT master
+	else
+	    touch $WWW_PATH/$PROJECT/conf/revision
+	    chown $SVN_USERNAME:$SVN_USERNAME $WWW_PATH/$PROJECT/conf/revision
+	    chmod 644 $WWW_PATH/$PROJECT/conf/revision
+	    /srv/admin/bin/update-revision.sh $PROJECT
+	fi
+
+	# generate crontab
+	if [ -d "$CROND_PATH" ]; then
+	    touch $WWW_PATH/$PROJECT/conf/crontab
+	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/crontab; chmod 644 $WWW_PATH/$PROJECT/conf/crontab
+	    ln -s $WWW_PATH/$PROJECT/conf/crontab $CROND_PATH/$PROJECT
+	fi
+
+	# generate conf/database and chown it
+	if [ -f "$SKEL_PATH/database.tpl" ]; then
+	    cp $SKEL_PATH/database.tpl $WWW_PATH/$PROJECT/conf/database
+	else
+	    cp $SKEL_PATH/database.tpl.dist $WWW_PATH/$PROJECT/conf/database
+	fi
+
+	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/database
+	chown $WWW_USERNAME:$WWW_USERNAME $WWW_PATH/$PROJECT/conf/database
+
+	if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
+	    # copy and convert git virtualhost template
+	    if [ -f "$SKEL_PATH/apache-vhost-git.tpl" ]; then
+		cp $SKEL_PATH/apache-vhost-git.tpl $WWW_PATH/$PROJECT/conf/apache.conf
+	    else
+		cp $SKEL_PATH/apache-vhost-git.tpl.dist $WWW_PATH/$PROJECT/conf/apache.conf
+	    fi
+	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache.conf
+
+	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache.conf
+	    ln -s $WWW_PATH/$PROJECT/conf/apache.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+
+	    if [ "$NGINX_ENABLED" != "NO" ]; then
+		if [ -f "$SKEL_PATH/nginx-vhost-git.tpl" ]; then
+		    cp $SKEL_PATH/nginx-vhost-git.tpl $WWW_PATH/$PROJECT/conf/nginx.conf
+		else
 		cp $SKEL_PATH/nginx-vhost-git.tpl.dist $WWW_PATH/$PROJECT/conf/nginx.conf
-	    fi
-	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx.conf
+		fi
+		eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx.conf
 
-	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx.conf
-	    ln -s $WWW_PATH/$PROJECT/conf/nginx.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-	fi
-    else
-	# copy and convert dev & rel virtualhost templates
-	if [ -f "$SKEL_PATH/apache-vhost-dev.tpl" ]; then
-	    cp $SKEL_PATH/apache-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/apache-dev.conf
+		chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx.conf
+		ln -s $WWW_PATH/$PROJECT/conf/nginx.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+	    fi
 	else
-	    cp $SKEL_PATH/apache-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/apache-dev.conf
-	fi
-	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-dev.conf
-
-	if [ -f "$SKEL_PATH/apache-vhost-rel.tpl" ]; then
-	    cp $SKEL_PATH/apache-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/apache-rel.conf
-	else
-	    cp $SKEL_PATH/apache-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/apache-rel.conf
-	fi
-	eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-rel.conf
-
-	chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache-dev.conf $WWW_PATH/$PROJECT/conf/apache-rel.conf
-	ln -s $WWW_PATH/$PROJECT/conf/apache-dev.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-	ln -s $WWW_PATH/$PROJECT/conf/apache-rel.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
-
-	if [ "$NGINX_ENABLED" != "NO" ]; then
-	    if [ -f "$SKEL_PATH/nginx-vhost-dev.tpl" ]; then
-		cp $SKEL_PATH/nginx-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+	    # copy and convert dev & rel virtualhost templates
+	    if [ -f "$SKEL_PATH/apache-vhost-dev.tpl" ]; then
+		cp $SKEL_PATH/apache-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/apache-dev.conf
 	    else
-		cp $SKEL_PATH/nginx-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+		cp $SKEL_PATH/apache-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/apache-dev.conf
 	    fi
-	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-dev.conf
 
-	    if [ -f "$SKEL_PATH/nginx-vhost-rel.tpl" ]; then
-		cp $SKEL_PATH/nginx-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	    if [ -f "$SKEL_PATH/apache-vhost-rel.tpl" ]; then
+		cp $SKEL_PATH/apache-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/apache-rel.conf
 	    else
-		cp $SKEL_PATH/nginx-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+		cp $SKEL_PATH/apache-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/apache-rel.conf
 	    fi
-	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+	    eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/apache-rel.conf
 
-	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx-dev.conf $WWW_PATH/$PROJECT/conf/nginx-rel.conf
-	    ln -s $WWW_PATH/$PROJECT/conf/nginx-dev.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
-	    ln -s $WWW_PATH/$PROJECT/conf/nginx-rel.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+	    chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/apache-dev.conf $WWW_PATH/$PROJECT/conf/apache-rel.conf
+	    ln -s $WWW_PATH/$PROJECT/conf/apache-dev.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+	    ln -s $WWW_PATH/$PROJECT/conf/apache-rel.conf $APACHE_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+
+	    if [ "$NGINX_ENABLED" != "NO" ]; then
+		if [ -f "$SKEL_PATH/nginx-vhost-dev.tpl" ]; then
+		    cp $SKEL_PATH/nginx-vhost-dev.tpl $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+		else
+		    cp $SKEL_PATH/nginx-vhost-dev.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+		fi
+		eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-dev.conf
+
+		if [ -f "$SKEL_PATH/nginx-vhost-rel.tpl" ]; then
+		    cp $SKEL_PATH/nginx-vhost-rel.tpl $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+		else
+		    cp $SKEL_PATH/nginx-vhost-rel.tpl.dist $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+		fi
+		eval sed $SED_FLAGS $SED_SUFFIX $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+
+		chown $ROOT_USERNAME:$ROOT_GROUP $WWW_PATH/$PROJECT/conf/nginx-dev.conf $WWW_PATH/$PROJECT/conf/nginx-rel.conf
+		ln -s $WWW_PATH/$PROJECT/conf/nginx-dev.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$DEV_HOSTNAME.conf
+		ln -s $WWW_PATH/$PROJECT/conf/nginx-rel.conf $NGINX_VIRTUALHOSTS_PATH/$PROJECT.$REL_HOSTNAME.conf
+	    fi
 	fi
-    fi
 
-    # create mysql database and grant access with temporary file
-    if [ "$MYSQL_ENABLED" != "NO" ]; then
+	# create mysql database and grant access with temporary file
+	if [ "$MYSQL_ENABLED" != "NO" ]; then
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD
 SET NAMES UTF8;
 CREATE USER '$PROJECT'@'localhost' IDENTIFIED BY '$PASSWORD';
@@ -420,21 +432,22 @@ CREATE DATABASE IF NOT EXISTS \`$PROJECT\`;
 GRANT ALL PRIVILEGES ON \`$PROJECT\`.* TO '$PROJECT'@'localhost';
 GRANT ALL PRIVILEGES ON \`$PROJECT\`.* TO '$PROJECT'@'%';
 EOF
-    fi
+	fi
 
-    # create postgresql username and database, grant access
-    if [ "$POSTGRESQL_ENABLED" != "NO" ]; then
-	createuser --username=$POSTGRESQL_USERNAME --no-superuser --no-createdb --no-createrole --encrypted $PROJECT
-	createdb --username=$POSTGRESQL_USERNAME --encoding=utf-8 --template=template0 --owner=$PROJECT $PROJECT
-	psql --username=$POSTGRESQL_USERNAME --dbname=postgres --command="ALTER USER \"$PROJECT\" WITH ENCRYPTED PASSWORD '$PASSWORD'"
-    fi
+	# create postgresql username and database, grant access
+	if [ "$POSTGRESQL_ENABLED" != "NO" ]; then
+	    createuser --username=$POSTGRESQL_USERNAME --no-superuser --no-createdb --no-createrole --encrypted $PROJECT
+	    createdb --username=$POSTGRESQL_USERNAME --encoding=utf-8 --template=template0 --owner=$PROJECT $PROJECT
+	    psql --username=$POSTGRESQL_USERNAME --dbname=postgres --command="ALTER USER \"$PROJECT\" WITH ENCRYPTED PASSWORD '$PASSWORD'"
+	fi
 
-    # reload apache
-    service httpd reload
+	# reload apache
+	service httpd reload
 
-    # reload nginx
-    if [ "$NGINX_ENABLED" != "NO" ]; then
-	service nginx reload
+	# reload nginx
+	if [ "$NGINX_ENABLED" != "NO" ]; then
+	    service nginx reload
+	fi
     fi
 
     echo "project created"
