@@ -262,8 +262,10 @@ EOF
 
 	if [ "$ACTION" != "gitcreate-bare" ]; then
 	    # clone branches
-    	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
-	    su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	    if [ -z $SCM_ONLY ]; then
+    		su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/repo/master"
+		su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT --branch dev $WWW_PATH/$PROJECT/repo/dev"
+	    fi
 	fi
 
 	if [ "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate" ]; then
