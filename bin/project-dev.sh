@@ -488,10 +488,12 @@ DROP USER '$PROJECT'@'%';
 DROP DATABASE IF EXISTS \`$PROJECT\`;
 EOF
 
+	if [ ! -z $MYDNS_ENABLED ]; then
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 DELETE FROM \`rr\` WHERE name = '$PROJECT';
 UPDATE \`soa\` SET serial=serial+1;
 EOF
+        fi
     fi
 
     # remove postgresql username and database
