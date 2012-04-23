@@ -268,13 +268,15 @@ EOF
 
 	if [ "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate" ]; then
 	    if [ -z $SCM_ONLY ]; then
-		if [ "$MYSQL_ENABLED" != "NO" ]; then
+		if [ ! -z $MYDNS_ENABLED ]; then
+		    if [ "$MYSQL_ENABLED" != "NO" ]; then
 cat << EOF | mysql -f -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -Dmydns
 INSERT INTO \`rr\` (\`zone\`, \`name\`, \`data\`, \`aux\`, \`ttl\`, \`type\`) VALUES
 (1, '$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME'),
 (1, '*.$PROJECT', '$DEV2_HOSTNAME.', 0, 1800, 'CNAME');
 UPDATE \`soa\` SET serial=serial+1;
 EOF
+		    fi
 		fi
 	    fi
 
