@@ -82,6 +82,15 @@ and you will have to use this reposman.rb command line to create repository :
 
   reposman.rb --redmine my.redmine.server --svn-dir /var/svn --owner www-data -u http://svn.server/svn-private/
 
+=head1 REPOSITORIES NAMING
+
+A projet repository must be named with the projet identifier. In case
+of multiple repositories for the same project, use the project identifier
+and the repository identifier separated with a dot:
+
+  /var/svn/foo
+  /var/svn/foo.otherrepo
+
 =head1 MIGRATION FROM OLDER RELEASES
 
 If you use an older reposman.rb (r860 or before), you need to change
@@ -177,7 +186,7 @@ use strict;
 use warnings FATAL => 'all', NONFATAL => 'redefine';
 
 use DBI;
-use Digest::SHA1;
+use Digest::SHA;
 # optional module for LDAP authentication
 my $CanUseLDAPAuth = eval("use Authen::Simple::LDAP; 1");
 
@@ -318,7 +327,7 @@ sub access_handler {
   my $project_id = get_project_identifier($r);
 
   $r->set_handlers(PerlAuthenHandler => [\&OK])
-      if is_public_project($project_id, $r);
+      if is_public_project($project_id, $r) && anonymous_role_allows_browse_repository($r);
 
   return OK
 }
@@ -390,6 +399,29 @@ sub is_public_project {
     $ret;
 }
 
+sub anonymous_role_allows_browse_repository {
+  my $r = shift;
+  
+  my $dbh = connect_database($r);
+  my $sth = $dbh->prepare(
+      "SELECT permissions FROM roles WHERE builtin = 2;"
+  );
+  
+  $sth->execute();
+  my $ret = 0;
+  if (my @row = $sth->fetchrow_array) {
+    if ($row[0] =~ /:browse_repository/) {
+      $ret = 1;
+    }
+  }
+  $sth->finish();
+  undef $sth;
+  $dbh->disconnect();
+  undef $dbh;
+  
+  $ret;
+}
+
 # perhaps we should use repository right (other read right) to check public access.
 # it could be faster BUT it doesn't work for the moment.
 # sub is_public_project_by_file {
@@ -413,7 +445,7 @@ sub is_member {
   my $dbh         = connect_database($r);
   my $project_id  = get_project_identifier($r);
 
-  my $pass_digest = Digest::SHA1::sha1_hex($redmine_pass);
+  my $pass_digest = Digest::SHA::sha1_hex($redmine_pass);
 
   my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
   my $usrprojpass;
@@ -430,7 +462,7 @@ sub is_member {
 
       unless ($auth_source_id) {
 	  my $method = $r->method;
-          my $salted_password = Digest::SHA1::sha1_hex($salt.$pass_digest);
+          my $salted_password = Digest::SHA::sha1_hex($salt.$pass_digest);
           if ($hashed_password eq $salted_password && ((request_is_read_only($r) && $permissions =~ /:browse_repository/) || $permissions =~ /:commit_access/) ) {
               $ret = 1;
               last;
@@ -484,7 +516,7 @@ sub get_project_identifier {
     my $r = shift;
     
     my $location = $r->location;
-    my ($identifier) = $r->uri =~ m{$location/*([^/]+)};
+    my ($identifier) = $r->uri =~ m{$location/*([^/.]+)};
     $identifier;
 }
 
