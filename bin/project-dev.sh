@@ -221,6 +221,12 @@ EOF
 	    # accept git push without authorization
 	    su $SU_SUFFIX $WWW_USERNAME -c "GIT_SSL_NO_VERIFY=true git config http.receivepack true"
 
+	    if [ ! -z $SCM_ONLY ]; then
+    		su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
+    		su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; touch initial; GIT_SSL_NO_VERIFY=true git add .; GIT_SSL_NO_VERIFY=true git commit -a -q -m \"initial\"; GIT_SSL_NO_VERIFY=true git push origin master"
+    		su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-master-branch"
+	    fi
+
 	    if [ -z $SCM_ONLY ]; then
     		# create dev branch
     		su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
