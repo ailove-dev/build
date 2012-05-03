@@ -207,10 +207,8 @@ EOF
 
     if [ "$ACTION" = "gitcreate" -o "$ACTION" = "gitcreate-bare" -o "$ACTION" = "gitcreate-secondary" ]; then
 
-	if [ -z $SCM_ONLY ]; then
-	    mkdir -p $WWW_PATH/$PROJECT && cd $WWW_PATH/$PROJECT
-	    chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
-	fi
+	mkdir -p $WWW_PATH/$PROJECT && cd $WWW_PATH/$PROJECT
+	chown -R $GIT_USERNAME:$GIT_USERNAME $WWW_PATH/$PROJECT
 
 	# don't create git repository on secondary
 	if [ "$ACTION" != "gitcreate-secondary" ]; then
@@ -224,7 +222,7 @@ EOF
 	    if [ ! -z $SCM_ONLY ]; then
     		su $SU_SUFFIX $GIT_USERNAME -c "GIT_SSL_NO_VERIFY=true git clone $GIT_URL/$PROJECT $WWW_PATH/$PROJECT/temp-master-branch"
     		su $SU_SUFFIX $GIT_USERNAME -c "cd $WWW_PATH/$PROJECT/temp-master-branch; touch initial; GIT_SSL_NO_VERIFY=true git add .; GIT_SSL_NO_VERIFY=true git commit -a -q -m \"initial\"; GIT_SSL_NO_VERIFY=true git push origin master"
-    		su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT/temp-master-branch"
+    		su $SU_SUFFIX $GIT_USERNAME -c "rm -rf $WWW_PATH/$PROJECT"
 	    fi
 
 	    if [ -z $SCM_ONLY ]; then
