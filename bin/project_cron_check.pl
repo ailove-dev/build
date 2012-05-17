@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 use strict;
+use utf8;
 use XML::Simple;
 use Data::Dumper;
 use Encode;
@@ -40,7 +41,7 @@ for($i=0;$i<=$iter;$i++) {
    $iter = int($data->{'total_count'} / 100);
    $projects = $data->{'project'};
    while ( my ($key, $value) = each(%$projects) ) {
-	    $cc_email="bond@techno-r.ru ";
+	    $cc_email="bond\@techno-r.ru ";
 	    $report_str="";
 	    $project_name=$key;
 	    $project_id=$projects->{$key}->{'identifier'};
@@ -135,15 +136,16 @@ for($i=0;$i<=$iter;$i++) {
 		    eval { $data_memb = $simple_memb->XMLin('/tmp/prrr4.xml');};
 #		    my $email_memb=$data_memb->{'mail'};
 #		    print "email - $email_memb \n";
-		    $cc_email.=$data_memb->{'mail'}." ";
+		    $cc_email.=",".$data_memb->{'mail'}." ";
 		};
 	     };
 	     };
 ##	     print "$cc_email \n";
 	    $report_str = Encode::encode("koi8-r",$report_str);
 	    $project_name = Encode::encode("koi8-r",$project_name);
+	    $cc_email = Encode::encode("koi8-r",$cc_email);
 #	     print "echo '$report_str' | mail -s 'Cron task for $project_name' -c '$cc_email' a.pachay\@ailove.ru\n";
-	     `echo '$report_str' | mail -s 'Cron task for $project_name' -c '$cc_email' a.pachay\@ailove.ru`;
+	     `echo "$report_str" | mail -s "Cron task for $project_name" -c '$cc_email' a.pachay\@ailove.ru`;
 ####
 	   };
    }
