@@ -66,3 +66,7 @@ if [ "$BRANCH" = "master" ]; then
     /srv/admin/bin/update-revision.sh $PROJECT $BRANCH
     exit
 fi
+
+if [ -f $WWW_PATH/$PROJECT/conf/update.sh ]; then
+    bash $WWW_PATH/$PROJECT/conf/update.sh
+fi
