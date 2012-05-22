@@ -113,8 +113,8 @@ optparse = OptionParser.new do |opts|
                                        "(use this option instead of --key if you don't", 
                                        "want the key to appear in the command line)") {|v| read_key_from_file(v)}
   opts.on("-t", "--test",              "only show what should be done") {$test = true}
-  opts.on("-2", "--secondary",         "add secondary flag") {$secondary = false}
-  opts.on("-b", "--bare",              "add bare flag") {$bare = false}
+  opts.on("-2", "--secondary",         "add secondary flag") {$secondary = true}
+  opts.on("-b", "--bare",              "add bare flag") {$bare = true}
   opts.on("-f", "--force",             "force repository creation even if the project", "repository is already declared in Redmine") {$force = true}
   opts.on("-v", "--verbose",           "verbose") {$verbose += 1}
   opts.on("-V", "--version",           "show version and exit") {puts Version; exit}
