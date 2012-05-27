@@ -10,15 +10,14 @@ uptime >> /tmp/$STAMP.tmp 2>&1
 echo >> /tmp/$STAMP.tmp
 
 if [ -f "/root/.mysql" ]; then
-    echo "mysql:" >> /tmp/$STAMP.tmp
+    echo "mysql processes:" >> /tmp/$STAMP.tmp
     echo >> /tmp/$STAMP.tmp
     mysql -u root -p`cat /root/.mysql` -e "SHOW FULL PROCESSLIST" | /bin/sort -n -k 6 >> /tmp/$STAMP.tmp 2>&1
-    mysql -u root -p`cat /root/.mysql` -e "SHOW STATUS where value !=0" >> /tmp/$STAMP.tmp 2>&1
     echo >> /tmp/$STAMP.tmp
 fi
 
 if [ -f "/root/.postgresql" ]; then
-    echo "postgresql:" >> /tmp/$STAMP.tmp
+    echo "postgresql processes:" >> /tmp/$STAMP.tmp
     echo >> /tmp/$STAMP.tmp
 
     if [ -f "/etc/init.d/pgbouncer" ]; then
@@ -31,11 +30,6 @@ if [ -f "/root/.postgresql" ]; then
     echo >> /tmp/$STAMP.tmp
 fi
 
-echo "process list:" >> /tmp/$STAMP.tmp
-echo >> /tmp/$STAMP.tmp
-ps auwwwx >> /tmp/$STAMP.tmp 2>&1
-echo >> /tmp/$STAMP.tmp
-
 echo "top list:" >> /tmp/$STAMP.tmp
 echo >> /tmp/$STAMP.tmp
 top -n 1 >> /tmp/$STAMP.tmp 2>&1
@@ -44,16 +38,6 @@ echo >> /tmp/$STAMP.tmp
 echo "top15 memory process list:" >> /tmp/$STAMP.tmp
 echo >> /tmp/$STAMP.tmp
 ps auwwwx | awk '{print $5/1000 "mb " $11}' | sort -g | tail -15 >> /tmp/$STAMP.tmp 2>&1
-echo >> /tmp/$STAMP.tmp
-
-echo "SYN TCP/UDP Session:" >> /tmp/$STAMP.tmp
-echo >> /tmp/$STAMP.tmp
-netstat -n | egrep '(tcp|udp)' | grep SYN | wc -l >> /tmp/$STAMP.tmp 2>&1
-echo >> /tmp/$STAMP.tmp
-
-echo "connections report:" >> /tmp/$STAMP.tmp
-echo >> /tmp/$STAMP.tmp
-netstat -plan | grep :80 | awk {'print $5'} | cut -d: -f 1 | sort | uniq -c | sort -n >> /tmp/$STAMP.tmp 2>&1
 echo >> /tmp/$STAMP.tmp
 
 LINKSVER=`links -version | grep "2.2" | wc -l`
@@ -78,6 +62,30 @@ else
     links -dump -eval 'set connection.retries = 1' -eval 'set connection.receive_timeout = 30' http://localhost/nginx-status >> /tmp/$STAMP.tmp 2>&1
     echo >> /tmp/$STAMP.tmp
 fi
+
+echo "process list:" >> /tmp/$STAMP.tmp
+echo >> /tmp/$STAMP.tmp
+ps auwwwx >> /tmp/$STAMP.tmp 2>&1
+echo >> /tmp/$STAMP.tmp
+
+echo "connections report:" >> /tmp/$STAMP.tmp
+echo >> /tmp/$STAMP.tmp
+netstat -plan | grep :80 | awk {'print $5'} | cut -d: -f 1 | sort | uniq -c | sort -n >> /tmp/$STAMP.tmp 2>&1
+echo >> /tmp/$STAMP.tmp
+
+echo "SYN TCP/UDP Session:" >> /tmp/$STAMP.tmp
+echo >> /tmp/$STAMP.tmp
+netstat -n | egrep '(tcp|udp)' | grep SYN | wc -l >> /tmp/$STAMP.tmp 2>&1
+echo >> /tmp/$STAMP.tmp
+
+
+if [ -f "/root/.mysql" ]; then
+    echo "mysql status:" >> /tmp/$STAMP.tmp
+    echo >> /tmp/$STAMP.tmp
+    mysql -u root -p`cat /root/.mysql` -e "SHOW STATUS where value !=0" >> /tmp/$STAMP.tmp 2>&1
+    echo >> /tmp/$STAMP.tmp
+fi
+
 
 cat /tmp/$STAMP.tmp | mail -s "`hostname` load" root
 rm /tmp/$STAMP.tmp
