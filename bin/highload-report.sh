@@ -4,6 +4,7 @@ PATH="/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin"
 
 STAMP=`date +%H%M%S`
 
+echo >> /tmp/$STAMP.tmp
 echo "load average:" >> /tmp/$STAMP.tmp
 echo >> /tmp/$STAMP.tmp
 uptime >> /tmp/$STAMP.tmp 2>&1
@@ -12,7 +13,7 @@ echo >> /tmp/$STAMP.tmp
 if [ -f "/root/.mysql" ]; then
     echo "mysql processes:" >> /tmp/$STAMP.tmp
     echo >> /tmp/$STAMP.tmp
-    mysql -u root -p`cat /root/.mysql` -e "SHOW FULL PROCESSLIST" | /bin/sort -n -k 6 >> /tmp/$STAMP.tmp 2>&1
+    mysql -u root -p`cat /root/.mysql` -e "SHOW FULL PROCESSLIST" | sort -n -k 6 >> /tmp/$STAMP.tmp 2>&1
     echo >> /tmp/$STAMP.tmp
 fi
 
