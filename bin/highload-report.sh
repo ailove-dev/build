@@ -56,7 +56,7 @@ echo >> /tmp/$STAMP.tmp
 netstat -plan | grep :80 | awk {'print $5'} | cut -d: -f 1 | sort | uniq -c | sort -n >> /tmp/$STAMP.tmp 2>&1
 echo >> /tmp/$STAMP.tmp
 
-LINKSVER="links -version | grep 2.2 | wc -l"
+LINKSVER=`links -version | grep "2.2" | wc -l`
 if [ $LINKSVER -gt 0 ]; then
     echo "apache:" >> /tmp/$STAMP.tmp
     echo >> /tmp/$STAMP.tmp
