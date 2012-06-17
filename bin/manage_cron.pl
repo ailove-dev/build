@@ -26,10 +26,16 @@ for($i=0;$i<=$iter;$i++) {
 ##   print $data->{'total_count'};
    $iter = int($data->{'total_count'} / 100);
 ##   print " $ioff, $iter \n";
-   $projects = $data->{'project'};
+   if ( $data->{'total_count'}-$data->{'offset'} == 1) { 
+     $projects = { $data->{'project'}->{'name'} => $data->{'project'} };
+   } else { 
+     $projects = $data->{'project'};
+   };     
    while ( my ($key, $value) = each(%$projects) ) {
-#          		 print "$key => $value\n";
-#	    print $projects->{$key}->{'identifier'};
+
+# 	    print "$key => $value\n";
+#	    print $projects->{$key}->{'identifier'}."\n";
+
            $ident_project=$projects->{$key}{'identifier'};
            $cron_enable=$projects->{$key}{'custom_fields'}{'custom_field'}{'Enable cron task'}{'value'};
            if ($cron_enable!=0) {$cron_enable=1;};
