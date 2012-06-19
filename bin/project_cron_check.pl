@@ -39,7 +39,12 @@ for($i=0;$i<=$iter;$i++) {
   `curl -s -H "Content-Type: application/xml" -X GET -H "X-Redmine-API-Key: b94cd05053447864c61039ea56504ac3f2db678f" "http://factory.ailove.ru/projects.xml?limit=100&offset=$ioff" >/tmp/prrr.xml`;
    my $data = $simple->XMLin('/tmp/prrr.xml');
    $iter = int($data->{'total_count'} / 100);
-   $projects = $data->{'project'};
+   if ( $data->{'total_count'}-$data->{'offset'} == 1) {
+       $projects = { $data->{'project'}->{'name'} => $data->{'project'} };
+   } else {
+       $projects = $data->{'project'};
+   };
+                      
    while ( my ($key, $value) = each(%$projects) ) {
 	    $cc_email="bond\@techno-r.ru ";
 	    $report_str="";
