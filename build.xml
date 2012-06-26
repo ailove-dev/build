@@ -7,7 +7,7 @@
     </condition>
 
     <target name="build"
-      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpunit,phpcb"/>
+      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,phpcb"/>
 
     <target name="build-parallel"
       depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
@@ -115,7 +115,9 @@
 </target>
 
 <target name="phpdox" description="Generate API documentation using phpDox">
-  <exec executable="phpdox${script-suffix}"/>
+  <exec executable="phpdox${script-suffix}">
+    <arg value="--file=${basedir}/build/phpdox.xml" />
+  </exec>
 </target>
 
 <target name="phpunit" description="Run unit tests with PHPUnit">
