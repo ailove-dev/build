@@ -2,7 +2,7 @@
 
 <project name="name-of-project" default="build">
   <property name="basedir" value="." />
-  <property name="builddir" value="${basedir}/../../" />
+  <property name="builddir" value="${basedir}/../../build/" />
   <condition property="script-suffix" value=".bat" else="">
     <os family="windows" />
   </condition>
