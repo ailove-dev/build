@@ -8,10 +8,10 @@
   </condition>
 
     <target name="build"
-      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,phpcb"/>
+      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,behat,phpcb"/>
 
     <target name="build-parallel"
-      depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
+      depends="prepare,lint,tools-parallel,phpunit,behat,phpcb"/>
 
     <target name="tools-parallel" description="Run tools in parallel">
       <parallel threadCount="2">
@@ -127,6 +127,12 @@
     <arg value="${basedir}/app" />
   </exec>
 </target>
+
+<target name="behat" description="Run behat tests">
+    <exec dir="${basedir}/" executable="php" failonerror="true">
+        <arg line="app/console -e=test behat -f junit --out ${builddir}/logs/behat" />
+    </exec>
+<target>
 
 <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
   <exec executable="phpcb${script-suffix}">
