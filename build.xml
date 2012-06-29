@@ -8,11 +8,17 @@
   </condition>
 
     <target name="build"
-      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,phpcb"/>
+      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,clear-cache,phpunit,phpcb"/>
 
     <target name="build-parallel"
       depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
-
+    
+    <target name="clear-cache" description="Clear cache">
+        <exec dir="${basedir}/" executable="php" failonerror="true">
+            <arg line="app/console clear:cache --env=test --no-debug" />
+        </exec>
+    <target>
+        
     <target name="tools-parallel" description="Run tools in parallel">
       <parallel threadCount="2">
         <sequential>
