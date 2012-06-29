@@ -15,7 +15,7 @@
     
     <target name="clear-cache" description="Clear cache">
         <exec dir="${basedir}/" executable="php" failonerror="true">
-            <arg line="app/console clear:cache --env=test --no-debug" />
+            <arg line="app/console --env=test cache:clear --no-debug" />
         </exec>
     </target>
 
