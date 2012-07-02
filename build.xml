@@ -100,6 +100,7 @@
   description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
   <exec executable="phpcs${script-suffix}">
     <arg value="--standard=Symfony2" />
+    <arg value="--ignore=*/Tests/*" />
     <arg path="${basedir}/src" />
   </exec>
 </target>
@@ -109,6 +110,7 @@
     <arg value="--report=checkstyle" />
     <arg value="--report-file=${builddir}/logs/checkstyle.xml" />
     <arg value="--standard=Symfony2" />
+     <arg value="--ignore=*/Tests/*" />
     <arg path="${basedir}/src" />
   </exec>
 </target>
