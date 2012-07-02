@@ -2,16 +2,22 @@
 
 <project name="name-of-project" default="build">
   <property name="basedir" value="." />
+  <property name="cachedir" value="${basedir}/../../cache" />
   <property name="builddir" value="${basedir}/../../build/" />
   <condition property="script-suffix" value=".bat" else="">
     <os family="windows" />
   </condition>
 
     <target name="build"
-      depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,clear-cache,phpunit,phpcb"/>
+      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,clear-cache,phpunit,phpcb"/>
 
     <target name="build-parallel"
       depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
+
+    <target name="cache-clear" description="Clear symfony2 cache">
+        <delete dir="${cachedir}/*"/>
+    </target>
+
     
     <target name="clear-cache" description="Clear cache">
         <exec dir="${basedir}/" executable="php" failonerror="true">
