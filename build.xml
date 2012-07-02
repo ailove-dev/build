@@ -9,7 +9,7 @@
   </condition>
 
     <target name="build"
-      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,phpcb"/>
+      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,behat,phpunit,phpcb"/>
 
     <target name="build-parallel"
       depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
