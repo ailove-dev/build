@@ -9,22 +9,16 @@
   </condition>
 
     <target name="build"
-      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,clear-cache,phpunit,phpcb"/>
+      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,phpcb"/>
 
     <target name="build-parallel"
       depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
 
     <target name="cache-clear" description="Clear symfony2 cache">
-        <delete dir="${cachedir}/*"/>
+        <delete dir="${cachedir}"/>
+        <mkdir dir="${cachedir}"/>
     </target>
-
     
-    <target name="clear-cache" description="Clear cache">
-        <exec dir="${basedir}/" executable="php" failonerror="true">
-            <arg line="app/console --env=test cache:clear --no-debug" />
-        </exec>
-    </target>
-
     <target name="tools-parallel" description="Run tools in parallel">
       <parallel threadCount="2">
         <sequential>
