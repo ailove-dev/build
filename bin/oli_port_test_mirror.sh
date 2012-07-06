@@ -16,4 +16,4 @@ else
     exit 0
 fi
 
-$SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no oli-port.mirror.ailove.ru "/srv/southbridge/script/mirror.sh"
+$SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no oli-port.mirror.ailove.ru "/srv/southbridge/scripts/mirror.sh"
