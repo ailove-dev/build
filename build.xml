@@ -9,7 +9,7 @@
   </condition>
 
     <target name="build"
-      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,behat,phpunit,phpcb"/>
+      depends="prepare,cache-clear,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,db_pro2test,git_dev2test,migrate,behat,phpunit,phpcb"/>
 
     <target name="build-parallel"
       depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
@@ -127,6 +127,28 @@
   <exec executable="phpdox${script-suffix}">
     <arg value="--file=${basedir}/app/phpdox.xml" />
   </exec>
+</target>
+
+<target name="db_pro2test">
+    <sshexec host="vs85.ailove.ru"
+        trust="Yes"
+        username="a.pachay"
+        keyfile="c:\ssh\id_rsa"
+        command="sudo /srv/southbridge/scripts/copy_pgbase"/>
+    </target>
+
+<target name="git_dev2test">
+    <sshexec host="dev.ailove.ru"
+        trust="Yes"
+        username="a.pachay"
+        keyfile="c:\ssh\id_rsa"
+        command="sudo /srv/admin/bin/update-test.sh <project>"/>
+    </target>
+
+<target name="migrate">
+    <exec dir="${basedir}/" executable="php" failonerror="true">
+        <arg line="app/console -e=prod doctrine:migrations:migrate --no-interaction" />
+    </exec>
 </target>
 
 <target name="phpunit" description="Run unit tests with PHPUnit">
