@@ -1,7 +1,6 @@
 #!/bin/sh
 
 PROJECT="$1"
-PROJECT="bepanthen"
 
 PATH=/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:$PATH
 LOCATION="$(cd -P -- "$(dirname -- "$0")" && pwd -P)/.."
