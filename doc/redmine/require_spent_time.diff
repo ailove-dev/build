@@ -1,19 +1,20 @@
-app/views/issues/_edit.rhtml:
-
-0a1,14
+/srv/admin/www/factory/htdocs/app/views/issues/_edit.html.erb 
+1c1,16
+< <%= labelled_form_for @issue, :html => {:id => 'issue-form', :multipart => true} do |f| %>
+---
 > <script type="text/javascript">
-> 	// <![CDATA[
-> 	function submit_form_update() {
-> 		var ele_status = document.getElementById("issue_status_id");
-> 		if (!ele_status || !ele_status.options) return true;
-> 		var ele_time = document.getElementById("time_entry_hours");
-> 		if (!ele_time) return true;
-> 		if (ele_time.value.length > 0 || ele_status.options[ele_status.selectedIndex].value != "7") return true;
-> 		alert("Укажи затраченное время!");
-> 		ele_time.focus();
-> 		return false;
-> 	}
+>  	// <![CDATA[
+>  	function submit_form_update() {
+>  		var ele_status = document.getElementById("issue_status_id");
+>  		if (!ele_status || !ele_status.options) return true;
+>  		var ele_time = document.getElementById("time_entry_hours");
+>  		if (!ele_time) return true;
+>  		if (ele_time.value.length > 0 || ele_status.options[ele_status.selectedIndex].value != "7") return true;
+>  		alert("Укажи затраченное время!");
+>  		ele_time.focus();
+>  		return false;
+>  	}
 > 	// ]]>
 > </script>
-5a20
->                                        :onsubmit => 'return submit_form_update()',
+> 
+> <%= labelled_form_for @issue, :html => {:id => 'issue-form', :multipart => true, :onsubmit => 'return submit_form_update()'} do |f| %>
