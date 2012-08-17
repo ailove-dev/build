@@ -37,7 +37,7 @@ set :cache_path, "../../cache"
 
 # Jenkins env vars
 set :basedir,		"."
-set :buildlogdir,	"#{basedir}/../../build/logs"
+set :builddir,		"#{basedir}/../../build"
 set :cachedir,  	"#{basedir}/../../cache"
 
 namespace :ailove do
@@ -45,19 +45,19 @@ namespace :ailove do
   desc "Cleanup cache and build artifacts"
   task :clean do
     pretty_print "--> Clean cache and build directory"
-    run_locally "rm -rf #{buildlogdir}/* #{cachedir}/*"
+    run_locally "rm -rf #{builddir}/* #{cachedir}/*"
     puts_ok
   end
 
   desc "Prepare for build"
   task :prepare do
     pretty_print "--> Prepare for build"
-    run_locally "mkdir #{buildlogdir}"
-    run_locally "mkdir #{buildlogdir}/api"
-    run_locally "mkdir #{buildlogdir}/code-browser"
-    run_locally "mkdir #{buildlogdir}/coverage"
-    run_locally "mkdir #{buildlogdir}/pdepend"
-    run_locally "mkdir #{buildlogdir}/phpdox"
+    run_locally "mkdir #{builddir}/api"
+    run_locally "mkdir #{builddir}/code-browser"
+    run_locally "mkdir #{builddir}/coverage"
+    run_locally "mkdir #{builddir}/pdepend"
+    run_locally "mkdir #{builddir}/phpdox"
+    run_locally "mkdir #{builddir}/behat"
     puts_ok
   end
 
@@ -71,14 +71,14 @@ namespace :ailove do
   desc "Behat"
   task :behat do
     pretty_print "--> Behat"
-    run_locally "php app/console -e=test behat -f junit --out #{buildlogdir}/behat"
+    run_locally "php app/console -e=test behat -f junit --out #{builddir}/behat"
     puts_ok
   end
 
   desc "PHPUnit"
   task :phpunit do
     pretty_print "--> PHPUnit"
-    run_locally "phpunit -c #{basedir}/app"
+    run_locally "phpunit -c ./app"
     puts_ok
   end
 
