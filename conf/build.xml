@@ -37,6 +37,7 @@
       <delete dir="${builddir}/coverage"/>
       <delete dir="${builddir}/logs"/>
       <delete dir="${builddir}/pdepend"/>
+      <delete dir="${builddir}/behat"/>
       <delete dir="${cachedir}/*"/>
     </target>
 
@@ -47,6 +48,7 @@
       <mkdir dir="${builddir}/logs"/>
       <mkdir dir="${builddir}/pdepend"/>
       <mkdir dir="${builddir}/phpdox"/>
+      <mkdir dir="${builddir}/behat"/>
     </target>
 
     <target name="lint" description="Perform syntax check of sourcecode files">
