@@ -139,7 +139,7 @@
 
 <target name="behat" description="Run behat tests">
     <exec dir="${mybasedir}/" executable="php" failonerror="true">
-        <arg line="app/console -e=test behat -f junit --out ${builddir}/logs/behat" />
+        <arg line="app/console -e=test behat -f junit --out ${builddir}/behat" />
     </exec>
 </target>
 
