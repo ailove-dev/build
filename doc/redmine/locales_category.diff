@@ -1,0 +1,25 @@
+htdocs/config/locales/ru.yml 
+311c311
+<   field_category: Категория
+---
+>   field_category: Подпроект
+537,539c537,539
+<   label_issue_category_new: Новая категория
+<   label_issue_category_plural: Категории задачи
+<   label_issue_category: Категория задачи
+---
+>   label_issue_category_new: Новый подпроект
+>   label_issue_category_plural: Подпроекты
+>   label_issue_category: Подпроект
+925,927c925,927
+<   text_issue_category_destroy_assignments: Удалить назначения категории
+<   text_issue_category_destroy_question: "Несколько задач (%{count}) назначено в данную категорию. Что Вы хотите предпринять?"
+<   text_issue_category_reassign_to: Переназначить задачи для данной категории
+---
+>   text_issue_category_destroy_assignments: Удалить назначение подпроекта
+>   text_issue_category_destroy_question: "Несколько задач (%{count}) назначено для данного подпроекта. Что Вы хотите предпринять?"
+>   text_issue_category_reassign_to: Переназначить задачи для данного подпроекта
+1105c1105
+<   description_issue_category_reassign: Choose issue category
+---
+>   description_issue_category_reassign: Выберите подпроект
