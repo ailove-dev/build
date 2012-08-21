@@ -26,6 +26,7 @@ depend :remote, :directory, "#:deploy_to/cache"
 
 set :jenkins_host, "http://test.ailove.ru:8080"
 set :jenkins_job_name, application
+set :jenkins_check, true
 
 set :branch,   "refs/heads/master"
 
@@ -93,7 +94,7 @@ namespace :ailove do
 
   desc "Ailove factory deploy action"
   task :factory_deploy do
-    jenkins_cap.build_check
+    jenkins_cap.build_check if jenkins_check
     deploy.update
   end
 
