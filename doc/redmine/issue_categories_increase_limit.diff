@@ -1,0 +1,23 @@
+/home/a.pachay/20120823181452_change_issue_categories_name_length_limit.rb
+0a1,9
+> class ChangeIssueCategoriesNameLengthLimit < ActiveRecord::Migration
+>   def self.up
+>     change_column :issue_categories, :name, :string, :limit => 255
+>   end
+> 
+>   def self.down
+>     change_column :issue_categories, :name, :string, :limit => 30
+>   end
+> end
+
+/srv/admin/www/factory/htdocs/app/models/issue_category.rb 
+26c26
+<   validates_length_of :name, :maximum => 30
+---
+>   validates_length_of :name, :maximum => 255
+
+/srv/admin/www/factory/htdocs/app/views/issue_categories/_form.html.erb 
+4c4
+< <p><%= f.text_field :name, :size => 30, :required => true %></p>
+---
+> <p><%= f.text_field :name, :size => 100, :required => true %></p>
