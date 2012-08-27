@@ -26,5 +26,7 @@ echo "$PROJECT"
 echo
 echo "### execute copydb-pro2dev.sh on $PROJECT.$PRO_HOSTNAME"
 echo
-$SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no -t $PROJECT.$PRO_HOSTNAME "cd /srv/admin/scripts; /srv/admin/scripts/copydb_pro2dev $PROJECT"
+echo "Start in background mode. Please wait to 10-20 min to copy bd...."
+
+$SUDO_PATH -u $GIT_USERNAME ssh -o StrictHostKeyChecking=no -t vs92.ailove.ru "cd /srv/admin/scripts; /srv/admin/scripts/copydb_pro2dev $PROJECT" &
 
