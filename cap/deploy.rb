@@ -1,7 +1,9 @@
 set :application, "equip"
 set :domain,      "#{application}.pro.ailove.ru"
-set :deploy_to,   "/srv/www/#{domain}"
+set :deploy_to,   "/srv/www/#{application}"
 set :app_path,    "app"
+
+set :use_sudo,   false
 
 set :repository,  "git@dev.ailove.ru:/srv/git/#{application}"
 set :scm,         :git
@@ -15,7 +17,7 @@ role :db,         domain, :primary => true       # This is where Symfony2 migrat
 set  :keep_releases,  3
 
 # Be more verbose by uncommenting the following line
-logger.level = Logger::MAX_LEVEL
+#logger.level = Logger::MAX_LEVEL
 
 set :web_path,    "htdocs"
 set :shared_children,     []
@@ -121,5 +123,33 @@ namespace :deploy do
     run "if [ -d #{latest_release}/#{cache_path} ] ; then rm -rf #{latest_release}/#{cache_path}/*; fi"
 
     puts_ok
+  end
+end
+
+namespace :symfony do
+#  namespace :bootstrap do
+#    desc "Runs the bin/build_bootstrap script"
+#    task :build, :roles => :app, :except => { :no_release => true } do
+#      pretty_print "--> Building bootstrap file (skip)"
+#
+#      puts_ok
+#    end
+#  end
+  namespace :cache do
+    desc "Clears cache"
+    task :clear, :roles => :app, :except => { :no_release => true } do
+      pretty_print "--> Clearing cache"
+
+      run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:clear --env=#{symfony_env_prod}"
+      puts_ok
+    end
+
+    desc "Warms up an empty cache"
+    task :warmup, :roles => :app, :except => { :no_release => true } do
+      pretty_print "--> Warming up cache"
+
+      run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:warmup --env=#{symfony_env_prod}"
+      puts_ok
+    end
   end
 end
