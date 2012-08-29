@@ -1,7 +1,6 @@
 set :application, "equip"
-set :domain,      "localhost"
-set :appdomain,   "#{application}.pro.ailove.ru"
-set :deploy_to,   "/srv/www/#{appdomain}"
+set :domain,      "#{application}.pro.ailove.ru"
+set :deploy_to,   "/srv/www/#{domain}"
 set :app_path,    "app"
 
 set :repository,  "git@dev.ailove.ru:/srv/git/#{application}"
