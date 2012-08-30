@@ -127,28 +127,21 @@ namespace :deploy do
 end
 
 namespace :symfony do
-#  namespace :bootstrap do
-#    desc "Runs the bin/build_bootstrap script"
-#    task :build, :roles => :app, :except => { :no_release => true } do
-#      pretty_print "--> Building bootstrap file (skip)"
-#
-#      puts_ok
-#    end
-#  end
   namespace :cache do
     desc "Clears cache"
     task :clear, :roles => :app, :except => { :no_release => true } do
       pretty_print "--> Clearing cache"
 
-      run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:clear --env=#{symfony_env_prod}"
+      #run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:clear --env=#{symfony_env_prod}"
+      run "su --shell=/bin/sh apache /srv/admin/bin/update-cache.sh #{application}"
       puts_ok
     end
 
     desc "Warms up an empty cache"
     task :warmup, :roles => :app, :except => { :no_release => true } do
-      pretty_print "--> Warming up cache"
+      pretty_print "--> Warming up cache (skip)"
 
-      run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:warmup --env=#{symfony_env_prod}"
+      #run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:warmup --env=#{symfony_env_prod}"
       puts_ok
     end
   end
