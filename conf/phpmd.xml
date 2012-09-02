@@ -11,11 +11,13 @@
   <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
     <priority>1</priority>
     <properties>
-       <property name="reportLevel" value="5" />
+      <property name="reportLevel" value="8" />
     </properties>
   </rule>
 
-  <rule ref="rulesets/naming.xml" />
+  <rule ref="rulesets/naming.xml">
+    <exclude name="ShortVariable" />
+  </rule>
 
   <rule ref="rulesets/design.xml" />
 
