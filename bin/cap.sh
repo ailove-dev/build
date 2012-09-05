@@ -17,8 +17,8 @@ else
     exit 0
 fi
 
-if [ -z "$PROJECT" ]; then
-    echo "use $0 <project>"
+if [ -z "$PROJECT" -o -z "$TASK" ]; then
+    echo "use $0 <project> <task>"
     exit 0
 fi
 
@@ -29,4 +29,4 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
     fi
 fi
 
-$SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $SVN_USERNAME@$PROJECT.$PRO_HOSTNAME "LANG=ru_RU.UTF-8 cd $WWW_PATH/$PROJECT/repo/master; cap  -f ../../conf/Capfile $TASK"
+$SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $SVN_USERNAME@$DEV2_HOSTNAME "LANG=ru_RU.UTF-8 cd $WWW_PATH/$PROJECT/repo/master; cap  -f ../../conf/Capfile $TASK"

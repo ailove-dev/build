@@ -1,8 +1,9 @@
 set :application, "equip"
-set :domain,      "localhost"
-set :appdomain,   "#{application}.pro.ailove.ru"
-set :deploy_to,   "/srv/www/#{appdomain}"
+set :domain,      "#{application}.pro.ailove.ru"
+set :deploy_to,   "/srv/www/#{application}"
 set :app_path,    "app"
+
+set :use_sudo,   false
 
 set :repository,  "git@dev.ailove.ru:/srv/git/#{application}"
 set :scm,         :git
@@ -16,7 +17,7 @@ role :db,         domain, :primary => true       # This is where Symfony2 migrat
 set  :keep_releases,  3
 
 # Be more verbose by uncommenting the following line
-logger.level = Logger::MAX_LEVEL
+#logger.level = Logger::MAX_LEVEL
 
 set :web_path,    "htdocs"
 set :shared_children,     []
@@ -31,6 +32,7 @@ set :jenkins_check, true
 set :branch,   "refs/heads/master"
 
 before 'deploy', 'jenkins_cap:build_check' # check if the revision has been built by Jenkins successfully
+after  'deploy:update', 'symfony:cache:clear_cli'
 
 set :releases_path, "#{deploy_to}/releases"
 set :current_path, "#{deploy_to}/repo/master"
@@ -117,10 +119,35 @@ namespace :deploy do
   task :finalize_update, :roles => :app, :except => { :no_release => true } do
     run "chmod -R g+w #{latest_release}" if fetch(:group_writable, true)
 
-    pretty_print "--> Creating cache directory"
-
-    run "if [ -d #{latest_release}/#{cache_path} ] ; then rm -rf #{latest_release}/#{cache_path}/*; fi"
+    symfony.cache.clear
 
     puts_ok
+  end
+end
+
+namespace :symfony do
+  namespace :cache do
+    desc "Clears cache"
+    task :clear, :roles => :app, :except => { :no_release => true } do
+      pretty_print "--> Clearing cache"
+
+      run "/usr/bin/sudo -u apache /srv/admin/bin/update-cache.sh #{application}"
+      puts_ok
+    end
+
+    desc "Clears cache from capistrano user"
+    task :clear_cli, :roles => :app, :except => { :no_release => true } do
+      pretty_print "--> Clearing cli cache"
+
+      run "if [ -d #{latest_release}/#{cache_path}/* ] ; then rm -rf #{latest_release}/#{cache_path}/*; fi"
+      puts_ok
+    end
+
+    desc "Warms up an empty cache"
+    task :warmup, :roles => :app, :except => { :no_release => true } do
+      pretty_print "--> Warming up cache (skip)"
+
+      puts_ok
+    end
   end
 end
