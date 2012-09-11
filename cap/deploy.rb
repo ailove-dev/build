@@ -132,7 +132,6 @@ namespace :symfony do
     task :clear, :roles => :app, :except => { :no_release => true } do
       pretty_print "--> Clearing cache"
 
-      #run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:clear --env=#{symfony_env_prod}"
       run "su --shell=/bin/sh apache /srv/admin/bin/update-cache.sh #{application}"
       puts_ok
     end
@@ -141,7 +140,6 @@ namespace :symfony do
     task :warmup, :roles => :app, :except => { :no_release => true } do
       pretty_print "--> Warming up cache (skip)"
 
-      #run "cd #{latest_release} && #{php_bin} #{symfony_console} cache:warmup --env=#{symfony_env_prod}"
       puts_ok
     end
   end
