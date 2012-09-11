@@ -32,6 +32,7 @@ set :jenkins_check, true
 set :branch,   "refs/heads/master"
 
 before 'deploy', 'jenkins_cap:build_check' # check if the revision has been built by Jenkins successfully
+after  'deploy:update', 'symfony:cache:clear_cli'
 
 set :releases_path, "#{deploy_to}/releases"
 set :current_path, "#{deploy_to}/repo/master"
@@ -118,9 +119,7 @@ namespace :deploy do
   task :finalize_update, :roles => :app, :except => { :no_release => true } do
     run "chmod -R g+w #{latest_release}" if fetch(:group_writable, true)
 
-    pretty_print "--> Creating cache directory"
-
-    run "if [ -d #{latest_release}/#{cache_path} ] ; then rm -rf #{latest_release}/#{cache_path}/*; fi"
+    symfony.cache.clear
 
     puts_ok
   end
@@ -132,7 +131,15 @@ namespace :symfony do
     task :clear, :roles => :app, :except => { :no_release => true } do
       pretty_print "--> Clearing cache"
 
-      run "su --shell=/bin/sh apache /srv/admin/bin/update-cache.sh #{application}"
+      run "/usr/bin/sudo -u apache /srv/admin/bin/update-cache.sh #{application}"
+      puts_ok
+    end
+
+    desc "Clears cache from capistrano user"
+    task :clear_cli, :roles => :app, :except => { :no_release => true } do
+      pretty_print "--> Clearing cli cache"
+
+      run "if [ -d #{latest_release}/#{cache_path}/* ] ; then rm -rf #{latest_release}/#{cache_path}/*; fi"
       puts_ok
     end
 

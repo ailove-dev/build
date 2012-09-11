@@ -21,6 +21,8 @@ if [ -z "$PROJECT" ]; then
     exit 0
 fi
 
-mkdir $WWW_PATH/$PROJECT/tmp/cache-to-remove
-mv $WWW_PATH/$PROJECT/cache/* $WWW_PATH/$PROJECT/tmp/cache-to-remove/
-rm -rf $WWW_PATH/$PROJECT/tmp/cache-to-remove
+if [ "$(ls -A $WWW_PATH/$PROJECT/cache)" ]; then
+    mkdir $WWW_PATH/$PROJECT/tmp/cache-to-remove
+    mv -f $WWW_PATH/$PROJECT/cache/* $WWW_PATH/$PROJECT/tmp/cache-to-remove/
+    rm -rf $WWW_PATH/$PROJECT/tmp/cache-to-remove
+fi
