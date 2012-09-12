@@ -28,4 +28,4 @@ if [ -f "$LOCATION/etc/extra-updates.conf.dist" ]; then
     fi
 fi
 
-$SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $SVN_USERNAME@$DEV2_HOSTNAME "LANG=ru_RU.UTF-8 cd $WWW_PATH/$PROJECT/repo/master; /usr/bin/php app/console -e=prod doctrine:migrations:migrate --no-interaction"
+$SUDO_PATH -u $SVN_USERNAME ssh -o StrictHostKeyChecking=no $SVN_USERNAME@$DEV2_HOSTNAME "LANG=ru_RU.UTF-8 cd $WWW_PATH/$PROJECT/repo/master; /usr/bin/php app/console -e=master doctrine:migrations:migrate --no-interaction"
