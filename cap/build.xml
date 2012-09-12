@@ -140,7 +140,7 @@
   </target>
 
   <target name="-get-pro-db">
-    <sshexec host="dev2.ailove.ru"
+    <sshexec host="dev.ailove.ru"
       trust="Yes"
       username="a.pachay"
       keyfile="c:\ssh\id_rsa"
@@ -155,7 +155,7 @@
   </target>
 
   <target name="migrate">
-    <sshexec host="dev2.ailove.ru"
+    <sshexec host="dev.ailove.ru"
       trust="Yes"
       username="a.pachay"
       keyfile="c:\ssh\id_rsa"
